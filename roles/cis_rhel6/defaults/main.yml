@@ -1,0 +1,100 @@
+---
+# file: roles/cis_rhel6/defaults/main.yml
+
+# Running this check is enabled by default
+cis_enabled: yes
+
+# By default, continue running the role even when some tasks fail
+# Changing this to "no" might lead to the role failing prematurely
+continue_after_error: yes
+
+# By default, ignore sysctl-related errors when the sysctl module
+# cannot find the key we are trying to set
+ignore_sysctl_errors: yes
+
+# List of xinetd_services to disable
+xinetd_services:
+  # CIS 2.1.1
+  - "chargen-dgram"
+  - "chargen-stream"
+  # CIS 2.1.2
+  - "daytime-dgram"
+  - "daytime-stream"
+  # CIS 2.1.3
+  - "discard-dgram"
+  - "discard-stream"
+  # CIS 2.1.4
+  - "echo-dgram"
+  - "echo-stream"
+  # CIS 2.1.5
+  - "time-dgram"
+  - "time-stream"
+
+# Lists of historic insecure servers and clients to disable
+insecure_servers:
+  # CIS 2.1.6
+  - "rsh-server"
+  # CIS 2.1.7
+  - "talk-server"
+  # CIS 2.1.8
+  - "telnet-server"
+  # CIS 2.1.9
+  - "tftp-server"
+
+insecure_clients:
+  # CIS 2.3.2
+  - "rsh"
+  # CIS 2.3.3
+  - "talk"
+  # CIS 2.3.4
+  - "telnet"
+
+# Should we configure AIDE on the system?
+# Options:
+#   yes: install and configure AIDE
+#   no: do not install or configure AIDE
+configure_aide: yes
+
+# Should we configure SELinux on the system?
+# Options:
+#   yes: install and configure SELinux
+#   no: do not install or configure SELinux
+configure_selinux: yes
+
+# Unwanted hidden files in user home directories
+bad_dot_files:
+  - ".forward"
+  - ".netrc"
+  - ".rhosts"
+
+# Users we should ignore when auditing home directories
+ignore_users:
+  - "nfsnobody"
+  - "ansible"
+  - "systemd-bus-proxy"
+  - "systemd-network"
+  - "polkitd"
+
+# ----------------------------------------------------------------------------
+# WARNING
+# THIS SECTION IS HAZARDOUS TO PRODUCTION SERVERS. SERIOUSLY.
+# ----------------------------------------------------------------------------
+
+# CIS says that users who are inactive for over 35 days must have their
+# accounts disabled. This could cause issues in some environments.
+# Options:
+#   yes: disable accounts inactive > 35 days per CIS requirements
+#   no: don't adjust inactive account settings
+lock_inactive: yes
+
+# Disable IPv6
+# It's recommended to configure IPv6 properly instead of disabling it entirely.
+# If your organization really doesn't use IPv6 at all, you could accept the
+# CIS requirements and disable IPv6.
+# Options:
+#   yes: disable IPv6 per CIS requirements
+#   no: don't alter the IPv6 configuration
+disable_ipv6: yes
+
+...
+# vim:ft=ansible:

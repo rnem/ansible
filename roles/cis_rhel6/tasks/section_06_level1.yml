@@ -1,0 +1,489 @@
+---
+# file: roles/cis_rhel6/tasks/section_06_level1.yml
+#
+# Copyright 2014 Major Hayden
+#           2017 Roger Nem
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+#
+
+  - name: "System Maintenance | 6.1.2 Ensure permissions on /etc/passwd are configured (Scored)"
+    file:
+      path: /etc/passwd
+      mode: 0644
+      owner: root
+      group: root
+    tags:
+      - scored
+      - section6.1
+      - section6.1.2
+
+  - name: "System Maintenance | 6.1.3 Ensure permissions on /etc/shadow are configured (Scored)"
+    file:
+      path: /etc/shadow
+      mode: 0000
+      owner: root
+      group: root
+    tags:
+      - scored
+      - section6.1
+      - section6.1.3
+
+  - name: "System Maintenance | 6.1.4 Ensure permissions on /etc/group are configured (Scored)"
+    file:
+      path: /etc/group
+      mode: 0644
+      owner: root
+      group: root
+    tags:
+      - scored
+      - section6.1
+      - section6.1.4
+
+  - name: "System Maintenance | 6.1.5 Ensure permissions on /etc/gshadow are configured (Scored)"
+    file:
+      path: /etc/gshadow
+      mode: 0000
+      owner: root
+      group: root
+    tags:
+      - scored
+      - section6.1
+      - section6.1.5
+
+  - name: "System Maintenance | 6.1.6 Ensure permissions on /etc/passwd- are configured (Scored)"
+    file:
+      path: /etc/passwd-
+      mode: 0600
+      owner: root
+      group: root
+    ignore_errors: yes
+    tags:
+      - scored
+      - section6.1
+      - section6.1.6
+
+  - name: "System Maintenance | 6.1.7 Ensure permissions on /etc/shadow- are configured (Scored)"
+    file:
+      path: /etc/shadow-
+      mode: 0000
+      owner: root
+      group: root
+    ignore_errors: yes
+    tags:
+      - scored
+      - section6.1
+      - section6.1.7
+
+  - name: "System Maintenance | 6.1.8 Ensure permissions on /etc/group- are configured (Scored)"
+    file:
+      path: /etc/group-
+      mode: 0600
+      owner: root
+      group: root
+    ignore_errors: yes
+    tags:
+      - scored
+      - section6.1
+      - section6.1.8
+
+  - name: "System Maintenance | 6.1.9 Ensure permissions on /etc/gshadow- are configured (Scored)"
+    file:
+      path: /etc/gshadow-
+      mode: 0000
+      owner: root
+      group: root
+    ignore_errors: yes
+    tags:
+      - scored
+      - section6.1
+      - section6.1.9
+
+  - name: "System Maintenance | 6.1.10 Ensure no world-writable files exist (find files) (Scored)"
+    shell: "df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -type f -perm -0002"
+    check_mode: no
+    changed_when: no
+    ignore_errors: yes
+    register: writable
+    tags:
+      - scored
+      - section6.1
+      - section6.1.10
+
+  - name: "System Maintenance | 6.1.10 Ensure no world-writable files exist (make not world-writable) (Scored)"
+    file:
+      path: "{{ item }}"
+      mode: "o-w"
+    with_items:
+      - "{{ writable.stdout_lines }}"
+    when:
+      - "writable.stdout_lines is defined"
+      - "writable.stdout_lines != []"
+    tags:
+      - scored
+      - section6.1
+      - section6.1.10
+
+  - name: "System Maintenance | 6.1.11 Ensure no unowned files or directories exist (find files and directories) (Scored)"
+    shell: "df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -nouser"
+    check_mode: no
+    changed_when: no
+    failed_when: "unowned.stdout != ''"
+    ignore_errors: "{{ continue_after_error }}"
+    register: unowned
+    tags:
+      - scored
+      - section6.1
+      - section6.1.11
+
+  - name: "System Maintenance | 6.1.12 Ensure no ungrouped files or directories exist (find files and directories) (Scored)"
+    shell: "df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -nogroup"
+    check_mode: no
+    changed_when: no
+    failed_when: "ungrouped.stdout != ''"
+    ignore_errors: "{{ continue_after_error }}"
+    register: ungrouped
+    tags:
+      - scored
+      - section6.1
+      - section6.1.12
+
+  - name: "System Maintenance | 6.1.13 - 6.1.14 Audit SUID/SGID executables (Not Scored)"
+    shell: "/bin/rpm -V `/bin/rpm -qf /usr/bin/sudo`"
+    check_mode: no
+    changed_when: no
+    failed_when: "suid.stdout != ''"
+    ignore_errors: "{{ continue_after_error }}"
+    register: suid
+    tags:
+      - notscored
+      - section6.1
+      - section6.1.13
+
+  - name: "System Maintenance | 6.2.1 Ensure Password Fields are Not Empty (Scored)"
+    shell: /bin/awk -F':' '($2 == "" ) {print $1 " does not have a password" }' /etc/shadow
+    check_mode: no
+    changed_when: no
+    failed_when: "emptypass.stdout != ''"
+    ignore_errors: "{{ continue_after_error }}"
+    register: emptypass
+    tags:
+      - scored
+      - section6.2
+      - section6.2.1
+
+  - name: "System Maintenance | 6.2.2 Ensure no legacy + entries exist in /etc/passwd (Scored)"
+    shell: grep -e '^+:' /etc/passwd
+    check_mode: no
+    changed_when: no
+    failed_when: not legacyplus_passwd.rc
+    ignore_errors: "{{ continue_after_error }}"
+    register: legacyplus_passwd
+    tags:
+      - scored
+      - section6.2
+      - section6.2.2
+
+  - name: "System Maintenance | 6.2.3 Ensure no legacy + entries exist in /etc/shadow (Scored)"
+    shell: grep -e '^+:' /etc/shadow
+    check_mode: no
+    changed_when: no
+    failed_when: not legacyplus_shadow.rc
+    ignore_errors: "{{ continue_after_error }}"
+    register: legacyplus_shadow
+    tags:
+      - scored
+      - section6.2
+      - section6.2.3
+
+  - name: "System Maintenance | 6.2.4 Ensure no legacy + entries exist in /etc/group (Scored)"
+    shell: grep -e '^+:' /etc/group
+    check_mode: no
+    changed_when: no
+    failed_when: not legacyplus_group.rc
+    ignore_errors: "{{ continue_after_error }}"
+    register: legacyplus_group
+    tags:
+      - scored
+      - section6.2
+      - section6.2.4
+
+  - name: "System Maintenance | 6.2.5 Ensure root is the only UID 0 account (Scored)"
+    shell: "/bin/awk -F':' '($3 == 0) {print $1}' /etc/passwd | grep -v root"
+    check_mode: no
+    changed_when: no
+    failed_when: not rootuid.rc
+    ignore_errors: "{{ continue_after_error }}"
+    register: rootuid
+    tags:
+      - scored
+      - section6.2
+      - section6.2.5
+
+# Section 6.2.6 had to be engineered a little. Simply running the script given
+# by CIS will not work through Ansible - neither would running it with the
+# Ansible "script" module, simply because _sudo_ is being used for priviledge
+# escalation, and with its current settings, _sudo_ resets environment
+# variables, and the PATH in particular.
+
+  - name: "System Maintenance | 6.2.6 Ensure root PATH integrity (copy script) (Scored)"
+    template:
+      src: rootpath.sh.j2
+      dest: /root/rootpath.sh
+      owner: root
+      group: root
+      mode: 0700
+    changed_when: no
+    tags:
+      - scored
+      - section6.2
+      - section6.2.6
+
+# This is how we get the actual root $PATH variable.
+
+  - name: "System Maintenance | 6.2.6 Ensure root PATH integrity (get root PATH) (Scored)"
+    shell: "/bin/bash -l -c env | grep PATH"
+    check_mode: no
+    changed_when: no
+    register: rootpath
+    tags:
+      - scored
+      - section6.2
+      - section6.2.6
+
+# We pass the $PATH as an argument to the script.
+
+  - name: "System Maintenance | 6.2.6 Ensure root PATH integrity (run script) (Scored)"
+    shell: "/root/rootpath.sh {{ rootpath.stdout }}"
+    register: rootpathscript
+    changed_when: no
+    failed_when: rootpathscript.rc
+    ignore_errors: "{{ continue_after_error }}"
+    tags:
+      - scored
+      - section6.2
+      - section6.2.6
+
+# Once the auditing is done, we remove the script.
+
+  - name: "System Maintenance | 6.2.6 Ensure root PATH integrity (remove script) (Scored)"
+    file:
+      path: /root/rootpath.sh
+      state: absent
+    changed_when: no
+    tags:
+      - scored
+      - section6.2
+      - section6.2.6
+
+  - name: "System Maintenance | 6.2.7 Ensure all users' home directories exist (get user list) (Scored)"
+    shell: "/bin/awk -F':' '($3 > 500) {print $1}' /etc/passwd"
+    check_mode: no
+    changed_when: no
+    register: userlist
+    tags:
+      - scored
+      - section6.2
+      - section6.2.7
+
+  - name: "System Maintenance | 6.2.7 Ensure all users' home directories exist (create home directories) (Scored)"
+    file:
+      path: "/home/{{ item }}"
+      state: directory
+      owner: "{{ item }}"
+      mode: 0700
+    # had to add a bunch of systemd specific users here
+    when: "item != ''{% for username in ignore_users %} and item != \'{{ username }}\'{% endfor %}"
+    tags:
+      - scored
+      - section6.2
+      - section6.2.7
+    with_items:
+      - "{{ userlist.stdout_lines }}"
+
+  - name: "System Maintenance | 6.2.7 Ensure all users' home directories exist (remove unwanted user) (Scored)"
+    user:
+      name: "{{ item }}"
+      state: absent
+      remove: yes
+    when: "item != ''{% for username in ignore_users %} and item != \'{{ username }}\'{% endfor %} and (user_list[item] is not defined or (user_list[item] is defined and user_list[item].state is defined and user_list[item].state != 'present'))"
+    tags:
+      - scored
+      - section6.2
+      - section6.2.7
+    with_items:
+      - "{{ userlist.stdout_lines }}"
+
+  - name: "System Maintenance | 6.2.8 Ensure users' home directories permissions are 750 or more restrictive (Scored)"
+    debug:
+      msg: "*** See 6.2.7"
+    tags:
+      - scored
+      - section6.2
+      - section6.2.8
+
+  - name: "System Maintenance | 6.2.9 Ensure users own their home directories (Scored)"
+    debug:
+      msg: "*** See 6.2.7"
+    tags:
+      - scored
+      - section6.2
+      - section6.2.9
+
+  - name: "System Maintenance | 6.2.10 Ensure user dotfiles are not group or world-writable (get user list) (Scored)"
+    shell: "/bin/awk -F':' '($3 > 500) {print $1}' /etc/passwd"
+    check_mode: no
+    changed_when: no
+    register: userlist
+    tags:
+      - scored
+      - section6.2
+      - section6.2.10
+
+  - name: "System Maintenance | 6.2.10 Ensure user dotfiles are not group or world-writable (list files) (Scored)"
+    find:
+      paths: "/home/{{ item }}"
+      patterns: ".*"
+      file_type: file
+      hidden: yes
+    register: dot_files
+    with_items:
+      - "{{ userlist.stdout_lines }}"
+    tags:
+      - scored
+      - section6.2
+      - section6.2.10
+
+  - name: "System Maintenance | 6.2.10 Ensure user dotfiles are not group or world-writable (fix files permissions) (Scored)"
+    file:
+      path: "{{ item.1.path }}"
+      owner: "{{ item.0.item }}"
+      mode: "o-w"
+      state: file
+    with_subelements:
+      - "{{ dot_files.results }}"
+      - files
+    tags:
+      - scored
+      - section6.2
+      - section6.2.10
+
+  - name: "System Maintenance | 6.2.11 - 6.2.14 Ensure no users have unwanted hidden dotfiles (get user list) (Scored)"
+    shell: "/bin/awk -F':' '($3 > 500) {print $1}' /etc/passwd"
+    check_mode: no
+    changed_when: no
+    register: userlist
+    tags:
+      - scored
+      - section6.2
+      - section6.2.11
+      - section6.2.12
+      - section6.2.14
+
+  - name: "System Maintenance | 6.2.11 - 6.2.14 Ensure no users have unwanted hidden dotfiles (remove files) (Scored)"
+    file:
+      path: "/home/{{ item.0 }}/{{ item.1 }}"
+      state: absent
+    with_nested:
+      - "{{ userlist.stdout_lines }}"
+      - "{{ bad_dot_files }}"
+    tags:
+      - scored
+      - section6.2
+      - section6.2.11
+      - section6.2.12
+      - section6.2.14
+
+  - name: "System Maintenance | 6.2.13 Ensure users' .netrc files are not group or world accessible (Scored)"
+    debug:
+      msg: "*** Per security policy, the .netrc files are removed. See 6.2.12"
+    tags:
+      - scored
+      - section6.2
+      - section6.2.13
+
+  - name: "System Maintenance | 6.2.15 Ensure all groups in /etc/passwd exist in /etc/group (get group list) (Scored)"
+    shell: "/bin/awk -F':' '{print $4}' /etc/passwd | sort -n | uniq"
+    check_mode: no
+    changed_when: no
+    register: groupids
+    when: groupids is not defined
+    tags:
+      - scored
+      - section6.2
+      - section6.2.15
+
+  - name: "System Maintenance | 6.2.15 Ensure all groups in /etc/passwd exist in /etc/group (check gid presence) (Scored)"
+    shell: "grep -q -e '^.*:[^:]*:{{ item }}:' /etc/group"
+    check_mode: no
+    changed_when: no
+    failed_when: groupid_presence.rc
+    ignore_errors: "{{ continue_after_error }}"
+    register: groupid_presence
+    with_items:
+      - "{{ groupids.stdout_lines }}"
+    tags:
+      - scored
+      - section6.2
+      - section6.2.15
+
+  - name: "System Maintenance | 6.2.16 Ensure no duplicate UIDs exist (Scored)"
+    shell: "/bin/awk -F':' '{print $3}' /etc/passwd | sort -n | uniq -c | grep -v -e '^ *1 '"
+    check_mode: no
+    changed_when: no
+    failed_when: uid_amount.rc == 0
+    ignore_errors: "{{ continue_after_error }}"
+    register: uid_amount
+    tags:
+      - scored
+      - section6.2
+      - section6.2.16
+
+  - name: "System Maintenance | 6.2.17 Ensure no duplicate GIDs exist (Scored)"
+    shell: "/bin/awk -F':' '{print $3}' /etc/group | sort -n | uniq -c | grep -v -e '^ *1 '"
+    check_mode: no
+    changed_when: no
+    failed_when: gid_amount.rc == 0
+    ignore_errors: "{{ continue_after_error }}"
+    register: gid_amount
+    tags:
+      - scored
+      - section6.2
+      - section6.2.17
+
+  - name: "System Maintenance | 6.2.18 Ensure no duplicate user names exist (Scored)"
+    shell: "/bin/awk -F':' '{print $1}' /etc/passwd | sort | uniq -c | grep -v -e '^ *1 '"
+    check_mode: no
+    changed_when: no
+    failed_when: user_amount.rc == 0
+    ignore_errors: "{{ continue_after_error }}"
+    register: user_amount
+    tags:
+      - scored
+      - section6.2
+      - section6.2.18
+
+  - name: "System Maintenance | 6.2.19 Ensure no duplicate group names exist (Scored)"
+    shell: "/bin/awk -F':' '{print $1}' /etc/group | sort | uniq -c | grep -v -e '^ *1 '"
+    check_mode: no
+    changed_when: no
+    failed_when: group_amount.rc == 0
+    ignore_errors: "{{ continue_after_error }}"
+    register: group_amount
+    tags:
+      - scored
+      - section6.2
+      - section6.2.19
+
+...
+# vim:ft=ansible:

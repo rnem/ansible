@@ -1,0 +1,18 @@
+---
+# file: roles/cis_rhel6/meta/main.yml
+
+galaxy_info:
+  author: Major Hayden, Roger Nem
+  description: Audit/remediate hosts using CIS security benchmarks v2.0.2 for RHEL6
+  company: My Company
+  license: Apache
+  min_ansible_version: 2
+  platforms:
+    - name: EL
+      versions:
+        - 6
+  categories: system
+dependencies: []
+
+...
+# vim:ft=ansible:

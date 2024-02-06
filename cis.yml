@@ -1,0 +1,29 @@
+---
+# file: cis.yml
+
+  - hosts:
+      - all
+    tasks:
+      - name: "Discover the OS and group hosts"
+        group_by:
+          key: "RHEL{{ ansible_distribution_major_version }}"
+        changed_when: no
+        failed_when: "(ansible_os_family != 'RedHat')"
+    tags: always
+
+  - hosts:
+      - RHEL6
+    tasks:
+      - name: "Center for Internet Security Recommendations : RHEL6 v2.0.2"
+        include_role:
+          name: cis_rhel6
+
+  - hosts:
+      - RHEL7
+    tasks:
+      - name: "Center for Internet Security Recommendations : RHEL7 v2.1.1"
+        include_role:
+          name: cis_rhel7
+
+...
+# vim:ft=ansible:
