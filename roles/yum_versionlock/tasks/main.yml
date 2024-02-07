@@ -11,30 +11,30 @@
       - "yum-plugin-versionlock.noarch"
 
   - name: yum versionlock; yum plugin configuration
-    template: >
-      src=versionlock.conf.j2
-      dest=/etc/yum/pluginconf.d/versionlock.conf
-      owner=root
-      group=root
-      mode=0644
-      backup=yes
-      seuser=system_u
-      serole=object_r
-      setype=etc_t
-      selevel=s0
+    template:
+      src: versionlock.conf.j2
+      dest: /etc/yum/pluginconf.d/versionlock.conf
+      owner: root
+      group: root
+      mode: 0644
+      backup: yes
+      seuser: system_u
+      serole: object_r
+      setype: etc_t
+      selevel: s0
 
   - name: yum versionlock; locking list
-    template: >
-      src=versionlock.list.j2
-      dest=/etc/yum/pluginconf.d/versionlock.list
-      owner=root
-      group=root
-      mode=0644
-      backup=yes
-      seuser=unconfined_u
-      serole=object_r
-      setype=etc_t
-      selevel=s0
+    template:
+      src: versionlock.list.j2
+      dest: /etc/yum/pluginconf.d/versionlock.list
+      owner: root
+      group: root
+      mode: 0644
+      backup: yes
+      seuser: unconfined_u
+      serole: object_r
+      setype: etc_t
+      selevel: s0
 
 # main block conditional
   when: 
