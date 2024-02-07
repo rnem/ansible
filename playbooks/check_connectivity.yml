@@ -1,0 +1,13 @@
+---
+# This simple playbook just tries to check connectivity with a series of hosts
+
+- name: check connectivity
+  hosts: all
+  gather_facts: no
+  serial: 25
+  tasks:
+  - name: ping 
+    ping:
+
+...
+# vim:ft=ansible:
