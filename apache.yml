@@ -1,0 +1,10 @@
+---
+
+- name: Apache
+  hosts: 
+    - all 
+  roles:
+    - apache
+
+...
+# vim:ft=ansible:

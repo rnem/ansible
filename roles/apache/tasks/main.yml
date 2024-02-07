@@ -1,0 +1,12 @@
+---
+
+ - include: apache.yml
+   when: apache_manage
+   tags: apache
+
+ - include: sigsci.yml
+   when: apache_sigsci_manage
+   tags: sigsci
+
+...
+# vim:ft=ansible:

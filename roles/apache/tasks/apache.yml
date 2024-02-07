@@ -1,0 +1,249 @@
+---
+# tasks file for roles/apache
+  - name: /etc/httpd/conf.d existence
+    register: confd_st
+    stat:
+      path: /etc/httpd/conf.d
+
+  - name: ssl.conf existence
+    register: ssl_conf_st
+    stat:
+      path: /etc/httpd/conf.d/ssl.conf
+
+# Global block
+  - block:
+    - name: install apache
+      yum:
+        name: "{{ item }}"
+        state: installed
+      with_items:
+        - httpd.x86_64
+        - mod_ssl.x86_64
+      tags:
+        - software
+
+    - name: install RHEL6 or RHEL7 Components
+      yum:
+        name: mod_proxy_html.x86_64
+        state: installed
+      when: 
+        - ansible_distribution_major_version in ['6', '7']
+      tags:
+        - software
+
+    - name: install php
+      yum:
+        name: php.x86_64
+        state: installed
+      when:
+        - apache_addon_php
+      tags:
+        - software
+
+    - name: install devel
+      yum:
+        name: "{{ item }}"
+        state: installed
+      with_items:
+        - httpd-devel.x86_64
+        - gcc.x86_64
+      when:
+        - apache_addon_devel
+      tags:
+        - software
+
+    - name: edit ssl.conf
+      template:
+        src: templates/ssl.conf.j2
+        dest: /etc/httpd/conf.d/ssl.conf
+        owner: root
+        group: root
+        mode: 0755
+        seuser: system_u
+        setype: httpd_config_t
+        serole: object_r
+        selevel: s0
+      when: 
+        - not ssl_conf_st.stat.exists and confd_st.stat.exists
+
+    - name: sysconfig
+      template:
+        src: "{{ apache_sysconfig_template[ansible_os_family][ansible_distribution_major_version|int] }}"
+        dest: /etc/sysconfig/httpd
+        owner: root
+        group: root
+        mode: 0664
+        seuser: system_u
+        serole: object_r
+        setype: etc_t
+        selevel: s0
+        backup: yes
+
+    - name: disable httpd posttrans
+      file:
+        dest: /etc/sysconfig/httpd-disable-posttrans
+        owner: root
+        group: root
+        mode: 0664
+        state: touch
+      changed_when: false
+      tags:
+        - httpd_postinst
+
+    - name: Change ownership of /usr/sbin/apachectl
+      file:
+        state: file
+        owner: "{{ apache_user }}"
+        group: "{{ apache_user }}"
+        path: /usr/sbin/apachectl
+      tags:
+        - httpd_ownership
+
+    - name: Change ownership of /etc/httpd
+      file:
+        state: directory
+        owner: "{{ apache_user }}"
+        group: "{{ apache_user }}"
+        path: /etc/httpd
+        recurse: yes
+      tags:
+        - httpd_ownership
+
+    - name: Change ownership of /var/log/httpd
+      file:
+        state: directory
+        owner: "{{ apache_user }}"
+        group: "{{ apache_user }}"
+        path: /var/log/httpd
+        recurse: yes
+      tags:
+        - httpd_ownership
+
+    - name: Change ownership of /var/run/httpd
+      file:
+        state: directory
+        owner: "{{ apache_user }}"
+        group: "{{ apache_user }}"
+        path: /var/run/httpd
+        recurse: yes
+      tags:
+        - httpd_ownership
+
+    #Block RHEL5 or RHEL6
+    - block:
+      - name: Disable init.d script
+        service:
+          name: httpd
+          enabled: no
+
+      - name: Start on boot
+        lineinfile:
+          dest: '/etc/rc.local'
+          regexp: '.*apachectl.*'
+          line: "/bin/su -l {{ apache_user }} --command='/usr/sbin/apachectl start'"
+          state: "{% if apache_autostart %}present{% else %}absent{% endif %}"
+      when:
+        - ansible_distribution_major_version in ['5', '6']
+      #end Block RHEL5 or RHEL6
+
+    #Block RHEL7
+    - block:
+      - name: persist /var/run/httpd ownership
+        template:
+          src: templates/rhel7_tmpfilesd_httpd.conf.j2
+          dest: /etc/tmpfiles.d/httpd.conf
+          owner: root
+          group: root
+          mode: 0644
+          seuser: system_u
+          setype: etc_t
+          serole: object_r
+          selevel: s0
+
+      - name: ensure existence of /etc/systemd/system/httpd.service.d/
+        file:
+          state: directory
+          owner: root
+          group: root
+          path: /etc/systemd/system/httpd.service.d
+          mode: 0755
+          seuser: system_u
+          setype: systemd_unit_file_t
+          serole: object_r
+          selevel: s0
+      
+      - name: /etc/systemd/system/httpd.service.d/override.conf
+        template:
+          src: templates/rhel7_systemd_httpd_override.conf.j2
+          dest: /etc/systemd/system/httpd.service.d/override.conf
+          owner: root
+          group: root
+          mode: 0644
+          seuser: system_u
+          setype: systemd_unit_file_t
+          serole: object_r
+          selevel: s0
+        notify: "systemd daemon-reload"
+
+      - name: RHEL7 Apache mpm mode
+        template:
+          src: templates/rhel7_mpm_{{ apache_mpm_mode }}.conf.j2
+          dest: /etc/httpd/conf.modules.d/00-mpm.conf
+          owner: "{{ apache_user }}"
+          group: "{{ apache_user }}"
+          mode: 0644
+          seuser: system_u
+          setype: httpd_config_t
+          serole: object_r
+          selevel: s0
+
+      - name: RHEL7 Apache directory /etc/httpd/env.override.d
+        file:
+          state: directory
+          path: /etc/httpd/env.override.d
+          owner: "{{ apache_user }}"
+          group: "{{ apache_user }}"
+          mode: 0700
+          seuser: system_u
+          setype: httpd_config_t
+          selevel: s0
+
+      - name: RHEL7 Apache /etc/httpd/env.override.d/README
+        template:
+          src: templates/rhel7_env.override.d_README.j2
+          dest: /etc/httpd/env.override.d/README
+          owner: "{{ apache_user }}"
+          group: "{{ apache_user }}"
+          mode: 0400
+          seuser: system_u
+          setype: httpd_config_t
+          serole: object_r
+          selevel: s0
+
+      - name: RHEL7 sudoers
+        template:
+          src: templates/rhel7_sudoers_httpd.j2
+          dest: /etc/sudoers.d/httpd
+          owner: root
+          group: root
+          mode: 0440
+          seuser: system_u
+          serole: object_r
+          setype: etc_t
+          selevel: s0
+          backup: yes
+
+      - name: RHEL7 Disable or Enabled httpd service at boot
+        service:
+          name: httpd
+          enabled: "{{ apache_autostart }}"
+      when:
+        - ansible_distribution_major_version in ['7']
+      #end REHL7 block
+    when:
+      - ansible_os_family == "RedHat"
+      - apache_manage
+    #end Global block
+
+...
+# vim:ft=ansible:

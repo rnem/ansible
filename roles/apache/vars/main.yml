@@ -1,0 +1,10 @@
+---
+
+apache_sysconfig_template:
+  RedHat:
+    5: templates/rhel5and6_sysconfig_httpd.j2
+    6: templates/rhel5and6_sysconfig_httpd.j2
+    7: templates/rhel7_sysconfig_httpd.j2
+
+...
+# vim:ft=ansible:

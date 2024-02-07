@@ -1,0 +1,8 @@
+---
+
+- name: systemd daemon-reload
+  command: systemctl daemon-reload
+  become: true
+
+...
+# vim:ft=ansible:

@@ -1,0 +1,9 @@
+# Managed by ansible, please don't edit by hand
+
+# Override the conf file to ensure we always start
+# with the configured non-privileged user
+
+script
+    [ -r /etc/default/sigsci-agent ] && . /etc/default/sigsci-agent
+    exec su {{ apache_user }} -c /usr/sbin/sigsci-agent > /var/log/sigsci-agent.log 2>&1
+end script

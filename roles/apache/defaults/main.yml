@@ -1,0 +1,22 @@
+---
+# defaults file for roles/apache
+
+apache_manage: false
+apache_autostart: true
+apache_mpm_mode: prefork
+apache_addon_devel: false
+apache_addon_php: false
+
+# Signal Sciences WAF settings
+
+apache_sigsci_manage: false
+apache_sigsci_accesskeyid: ***********
+apache_sigsci_secretkey: ***********
+apache_sigsci_socket_dir: /var/run/sigsci
+apache_sigsci_socket_file: sigsci.sock
+apache_sigsci_log_dir: /var/log/httpd
+apache_sigsci_log_file: sigsci.log
+
+...
+# vim:ft=ansible:
+

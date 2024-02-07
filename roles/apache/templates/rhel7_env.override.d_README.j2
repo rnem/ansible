@@ -1,0 +1,35 @@
+
+The directory /etc/httpd/env.override.d and this README file was
+created by the Sony Pictures EIS - UNIX/Linux Support team.
+Please contact EIS_UNIX_System_Services@spe.sony.com if you need
+further explanation.
+
+This directory holds environment configuration files for systemd
+when it starts and loads the Apache HTTP Server; any files in this
+directory which have the ".env" extension will be processed as
+additional environment variables for the httpd process, or pass
+additional options to the httpd executable. All ".env" files must
+be readable by the user "{{ apache_user }}" that httpd is 
+running under.
+
+All ".env" files will override anything defined in 
+/etc/sysconfig/httpd which is restricted. Please read and review 
+/etc/sysconfig/httpd as well.
+
+Files ending with ".env" are processed in alphabetical order and can
+override themselves as well.
+
+To pass additional options (for instance, -D definitions) to the
+httpd binary at startup, set OPTIONS in a file ending with ".env"
+in this directory.
+
+Because of restrictions of systemd, you cannot use the source 
+statement and you cannot have variables refer to other variables.
+
+Example of will NOT work:
+SPECIAL_PATH=/opt/special
+SPECIAL_APP=${SPECIAL_PATH}/app
+
+Example of what WILL work:
+SPECIAL_PATH=/opt/special
+SPECIAL_APP=/opt/special/app

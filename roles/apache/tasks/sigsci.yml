@@ -1,0 +1,63 @@
+---
+# Signal Sciences WAF install/config
+# RHEL6 only at this point
+
+# Global block
+  - block:
+    - name: apache sigsci.yml - install agent and apache module
+      yum:
+        name: "{{ item }}"
+        state: latest
+      with_items:
+        - sigsci-module-apache
+        - sigsci-agent
+
+    - name: apache sigsci.yml - Push out /etc/sigsci/agent.conf"
+      template:
+        src: sigsci_agent.conf.j2
+        dest: /etc/sigsci/agent.conf
+        owner: "{{ apache_user }}"
+        group: "{{ apache_user }}"
+        mode: 0600
+        seuser: unconfined_u
+        setype: etc_t
+        serole: object_r
+        selevel: s0
+
+    #Block RHEL6
+    - block:
+      - name: apache sigsci.yml - RHEL6 push custom init override file
+        template:
+          src: sigsci_agent.init_conf.j2
+          dest: /etc/init/sigsci-agent.override
+          owner: root
+          group: root
+          mode: 0644
+          seuser: system_u
+          setype: etc_t
+          serole: object_r
+          selevel: s0
+
+      - name: apache sigsci.yml - RHEL6 ensure /var/run/sigsci exists
+        file:
+          state: directory
+          path: "{{ apache_sigsci_socket_dir }}"
+          owner: "{{ apache_user }}"
+          group: "{{ apache_user }}"
+          mode: 0700
+          seuser: system_u
+          setype: initrc_var_run_t
+          serole: object_r
+          selevel: s0
+
+      when:
+        - ansible_distribution_major_version in ['6']
+      #end Block RHEL6
+
+    when:
+      - ansible_os_family == "RedHat"
+      - apache_sigsci_manage
+    #end Global block
+
+...
+# vim:ft=ansible:

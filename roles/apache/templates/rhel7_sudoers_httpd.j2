@@ -1,0 +1,5 @@
+# Ansible apache role for httpd RHEL7 apachectl access
+
+Cmnd_Alias HTTPD_CMDS=/usr/bin/systemctl start httpd.service, /usr/bin/systemctl stop httpd.service, /usr/bin/systemctl restart httpd.service, /usr/bin/systemctl status httpd.service, /usr/bin/systemctl reload httpd.service, /usr/sbin/apachectl start, /usr/sbin/apachectl stop, /usr/sbin/apachectl restart, /usr/sbin/apachectl status, /usr/sbin/apachectl graceful, /usr/sbin/apachectl graceful-stop, /usr/sbin/apachectl configtest
+
+{{ apache_user }} ALL=(root) NOPASSWD: HTTPD_CMDS
