@@ -1,0 +1,10 @@
+---
+
+- name: cron
+  hosts: 
+    - all 
+  roles:
+    - cron
+
+...
+# vim:ft=ansible:
