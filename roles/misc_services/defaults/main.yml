@@ -1,0 +1,7 @@
+---
+# defaults file for misc_services
+
+misc_services_manage: false
+
+...
+# vim:ft=ansible:

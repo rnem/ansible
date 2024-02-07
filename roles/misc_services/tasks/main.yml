@@ -1,0 +1,15 @@
+---
+# file: roles/misc_services/tasks/main.yml
+
+- name: ensure services are running
+  service:
+    name: "{{ item }}" 
+    state: started
+    enabled: yes
+  with_items:
+    - misc_services_managed
+  when:
+    - misc_services_manage
+
+...
+# vim:ft=ansible:
