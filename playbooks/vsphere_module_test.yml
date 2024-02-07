@@ -1,0 +1,38 @@
+---
+
+- hosts: localhost
+  
+  vars_prompt:
+    - name: "vc_password"
+      prompt: "Please enter password for vcenter"
+      private: yes
+
+  vars:
+    vcenter_host: vcenter.host.domain.com
+    vcenter_login: user@domain.com
+    vcenter_password: "{{ vc_password }}"
+    vm_to_use: testVM
+
+  tasks:
+  - name: Test PowerOn State
+    local_action:
+      module: setup
+      module: vsphere
+      checkssl: true
+      host: "{{ vcenter_host }}"
+      login: "{{ vcenter_login }}"
+      password: "{{ vcenter_password }}"
+      datacenter: DC_NAME_VCENTER
+      spec:
+        register: vm_guest_info
+        type: VirtualMachineConfigInfo
+        value: 
+          config:
+            VirtualMachineConfigInfo:
+              name: "{{ vm_to_use }}"
+      guest:
+        name: "{{ vm_to_use }}"
+        state: running
+
+...
+# vim:ft=ansible:
