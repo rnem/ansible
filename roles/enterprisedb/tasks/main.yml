@@ -1,0 +1,30 @@
+---
+# file: roles/enterprisedb/tasks/main.yml
+# this playbook installs EnterpriseDB on the desired hosts
+
+- import_tasks: edb_uninstall.yml
+  when:
+    - enterprisedb_manage
+    - enterprisedb_uninstall
+  tags:
+    - uninstall
+
+- import_tasks: enterprisedb.yml
+  when: enterprisedb_manage
+  tags:
+    - install
+
+- import_role:
+    name: own_dirs
+  vars:
+    - own_dirs_manage: true
+    - owned_dirs:
+        - path: "{{ enterprisedb_edb_dir }}" 
+          owner: "{{ enterprisedb_user }}" 
+          group: "{{ enterprisedb_group }}"
+          mode: "0755"
+          recurse: true
+  tags:
+    - permissions
+ 
+# vim:ft=ansible:

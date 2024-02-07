@@ -1,0 +1,5 @@
+---
+# file: roles/enterprisedb/vars/main.yml
+
+...
+# vim:ft=ansible:

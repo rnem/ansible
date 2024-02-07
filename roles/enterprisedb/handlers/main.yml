@@ -1,0 +1,14 @@
+---
+# file: roles/enterprisedb/handlers/main.yml
+
+- name: "init enterprisedb"
+  command: "{{ enterprisedb_PGENGINE }}/edb-as-10-setup initdb"
+
+- name: "start enterprisedb"
+  service:
+    name: "{{ enterprisedb_service }}"
+    state: started
+    enabled: yes
+
+...
+# vim:ft=ansible:

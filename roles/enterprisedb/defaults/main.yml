@@ -1,0 +1,67 @@
+---
+# file: roles/enterprisedb/defaults/main.yml
+
+enterprisedb_manage: false
+enterprisedb_uninstall: false
+enterprisedb_remove_data: false
+
+# the following defaults respect the vendor guidelines
+
+enterprisedb_version: "10"
+enterprisedb_path: "/var/lib/edb"
+
+enterprisedb_PGENGINE: "/usr/edb/as{{ enterprisedb_version }}/bin"
+enterprisedb_PGPORT: 5444
+enterprisedb_PGDATA: "{{ enterprisedb_path }}/as{{ enterprisedb_version }}/data"
+enterprisedb_PGLOG: "{{ enterprisedb_path }}/as{{ enterprisedb_version }}/pgstartup.log"
+
+enterprisedb_user: "enterprisedb"
+enterprisedb_group: "enterprisedb"
+
+enterprisedb_user_hd: "{{ enterprisedb_path }}/as{{ enterprisedb_version }}"
+
+enterprisedb_service: "edb-as-{{ enterprisedb_version }}"
+
+enterprisedb_log: "/var/log/postgresql"
+enterprisedb_edb_dir: "/usr/edb"
+
+enterprisedb_packages:
+- "edb-as{{ enterprisedb_version }}"
+- "edb-as{{ enterprisedb_version }}-edbplus"
+- "edb-as{{ enterprisedb_version }}-pgagent"
+- "edb-as{{ enterprisedb_version }}-pgpool36-extensions"
+- "edb-as{{ enterprisedb_version }}-pgsnmpd"
+- "edb-as{{ enterprisedb_version }}-pljava"
+- "edb-as{{ enterprisedb_version }}-server"
+- "edb-as{{ enterprisedb_version }}-server-client"
+- "edb-as{{ enterprisedb_version }}-server-cloneschema"
+- "edb-as{{ enterprisedb_version }}-server-contrib"
+- "edb-as{{ enterprisedb_version }}-server-core"
+- "edb-as{{ enterprisedb_version }}-server-devel"
+- "edb-as{{ enterprisedb_version }}-server-docs"
+- "edb-as{{ enterprisedb_version }}-server-indexadvisor"
+- "edb-as{{ enterprisedb_version }}-server-libs"
+- "edb-as{{ enterprisedb_version }}-server-parallel-clone"
+- "edb-as{{ enterprisedb_version }}-server-pldebugger"
+- "edb-as{{ enterprisedb_version }}-server-plperl"
+- "edb-as{{ enterprisedb_version }}-server-plpython"
+- "edb-as{{ enterprisedb_version }}-server-pltcl"
+- "edb-as{{ enterprisedb_version }}-server-sqlprofiler"
+- "edb-as{{ enterprisedb_version }}-server-sqlprotect"
+- "edb-as{{ enterprisedb_version }}-server-sslutils"
+- "edb-as{{ enterprisedb_version }}-slony-replication"
+- "edb-as{{ enterprisedb_version }}-slony-replication-core"
+- "edb-as{{ enterprisedb_version }}-slony-replication-docs"
+- "edb-as{{ enterprisedb_version }}-slony-replication-tools"
+- "edb-bart"
+- "edb-bart20"
+- "edb-jdbc"
+- "edb-migrationtoolkit"
+- "edb-oci"
+- "edb-odbc"
+- "libevent-edb"
+- "libiconv-edb"
+- "libicu-edb"
+
+...
+# vim:ft=ansible:

@@ -1,0 +1,42 @@
+---
+# file: roles/enterprisedb/tasks/enterprisedb.yml
+
+- name: "retrieve and install EDB packages from yum repository"
+  yum:
+    name: "{{ item }}"
+    state: latest
+    update_cache: yes
+  with_items: 
+    - "{{ enterprisedb_packages }}"
+  notify:
+    - start enterprisedb
+
+- name: "create {{ enterprisedb_log }} (first time only)"
+  file:
+    path: "{{ enterprisedb_log }}"
+    state: directory
+    owner: "{{ enterprisedb_user }}"
+    group: "{{ enterprisedb_group }}"
+    mode: 0600
+
+- name: "create {{ enterprisedb_PGDATA }} if required"
+  file:
+    path: "{{ enterprisedb_PGDATA }}"
+    state: directory
+    owner: "{{ enterprisedb_user }}"
+    group: "{{ enterprisedb_group }}"
+    mode: 0750
+  notify:
+    - init enterprisedb
+
+- name: "configure enterprisedb (first time only)"
+  template:
+    src: edb-as-10.sysconfig.j2
+    dest: /etc/sysconfig/edb/as10/edb-as-10.sysconfig
+    owner: "{{ enterprisedb_user }}"
+    group: "{{ enterprisedb_group }}"
+    mode: 0750
+    force: no
+
+...
+# vim:ft=ansible:
