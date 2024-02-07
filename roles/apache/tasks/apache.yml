@@ -64,7 +64,8 @@
         serole: object_r
         selevel: s0
       when: 
-        - not ssl_conf_st.stat.exists and confd_st.stat.exists
+        - not ssl_conf_st.stat.exists
+        - confd_st.stat.exists
 
     - name: sysconfig
       template:
