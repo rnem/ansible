@@ -1,0 +1,14 @@
+---
+
+- name: yum update all
+  hosts: all
+  gather_facts: no
+  serial: 50
+  tasks:
+
+    - yum:
+        name: *
+        state: latest
+
+...
+# vim:ft=ansible:
