@@ -1,0 +1,10 @@
+---
+
+- name: yum_versionlock
+  hosts: 
+    - all 
+  roles:
+    - yum_versionlock
+
+...
+# vim:ft=ansible:
