@@ -1,0 +1,10 @@
+---
+# defaults file for roles/yum_versionlock
+
+yum_versionlock_manage: false
+
+yum_versionlock_locks: []
+yum_versionlock_follow_obsoletes: '0'
+
+...
+# vim:ft=ansible:
