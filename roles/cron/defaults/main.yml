@@ -1,0 +1,9 @@
+---
+# defaults file for roles/cron
+
+cron_allowed_users: []
+
+cron_manage: false
+
+...
+# vim:ft=ansible:

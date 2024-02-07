@@ -1,0 +1,53 @@
+---
+# tasks file for roles/cron
+
+# Global block
+- block:
+
+  - name: packages
+    yum:
+      name: "{{ item }}"
+    with_items:
+      - cronie
+      - cronie-anacron
+      - crontabs
+
+  - name: allowed users
+    notify: restart crond
+    template:
+      src: cron.allow.j2
+      dest: /etc/cron.allow
+      owner: root
+      group: root
+      mode: 0600
+      backup: yes
+      seuser: system_u
+      serole: object_r
+      setype: etc_t
+      selevel: s0
+
+  - name: crontab binary permissions
+    notify: restart crond
+    file:
+      state: file
+      dest: /usr/bin/crontab
+      owner: root
+      group: root
+      mode: 4755
+      seuser: system_u
+      serole: object_r
+      setype: crontab_exec_t
+      selevel: s0
+
+  - name: service
+    service: >
+      name: crond
+      enabled: yes
+      state: started
+
+  when: 
+    - cron_manage
+  #end Global block
+
+...
+# vim:ft=ansible:
