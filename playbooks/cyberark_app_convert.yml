@@ -1,0 +1,37 @@
+---
+# This playbook should be used to convert an existing account into a CyberArk account
+# It will set the properties needed for a CyberArk account and then email the CyberArk team
+# This can be done under an INC, but they app team may need additional tickets for AD and CyberArk teams.
+
+- name: Convert existing linux login to cyberark management
+  hosts: all
+
+  vars_prompt:
+    - name: ticket_number
+      prompt: "Please enter ticket number"
+      private: no
+    - name: user_account
+      prompt: "Please enter user account name to convert"
+      private: no
+
+  tasks:
+  - include_vars: ../group_vars/all/user_list
+
+  - fail:
+      msg: 'Account is not configured in user_list for cyberark management.'
+    when:
+      - (user_list[user_account].cyberark) is not defined
+
+  - name: set min password age for account
+    command: "chage -m 0 {{ user_account }}"
+
+  - name: Email onboarding information
+    become: no
+    local_action: shell
+                  echo -e "The {{ user_account }} account on {{ inventory_hostname }} has been converted to CyberArk management in ansible.\n\n
+                  Please onboard {{ user_account }} @ {{ inventory_hostname }} and reconcile this account pursuant to {{ ticket_number }}.\n\n
+                  Please work with requester of {{ ticket_number }} for any additional information needed." |
+                  mailx -s "Conversion of {{ user_account }} on {{ inventory_hostname }} to CyberArk for {{ ticket_number }}." 'cyberark_team@email.com'
+
+...
+# vim:ft=ansible:
