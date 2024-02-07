@@ -1,0 +1,7 @@
+---
+# defaults file for cron_jobs
+
+cronjob_manage: false
+
+...
+# vim:ft=ansible:

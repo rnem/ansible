@@ -1,0 +1,25 @@
+---
+# tasks file for cronjobs
+
+# Creates a cron jobs either crontab or under /etc/cron.d
+- name: Create Cron Jobs
+  cron:
+    minute: "{{ item.minute | default(omit) }}"
+    hour: "{{ item.hour | default(omit) }}"
+    day: "{{ item.day | default(omit) }}"
+    month: "{{ item.month | default(omit) }}"
+    weekday: "{{ item.weekday | default(omit) }}"
+    user: "{{ item.user | default(omit) }}"
+    cron_file: "{{ item.cron_file | default(omit) }}"
+    job: "{{ item.job | default(omit) }}"
+    name: "{{ item.name }}"
+    special_time: "{{ item.special_time | default(omit) }}"
+    state: "{{ item.state | default(omit) }}"
+  notify: restart crond
+  with_items:
+    - "{{ managed_cronjobs }}"
+  when:
+    - cronjob_manage
+
+...
+# vim:ft=ansible:
