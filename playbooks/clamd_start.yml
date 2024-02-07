@@ -1,0 +1,13 @@
+---
+
+- name: clamd start
+  hosts: all
+  tasks:
+
+    - name: clamd start
+      service:
+        name: clamd
+        state: restarted
+
+...
+# vim:ft=ansible:
