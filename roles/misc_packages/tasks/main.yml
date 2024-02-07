@@ -1,0 +1,14 @@
+---
+# file: roles/misc_packages/tasks/main.yml
+
+- name: ensure software is installed
+  yum:
+    pkg: "{{ item }}"
+    state: installed
+  with_items:
+    - "{{ misc_packages_managed }}"
+  when:
+    - misc_packages_manage
+
+...
+# vim:ft=ansible:
