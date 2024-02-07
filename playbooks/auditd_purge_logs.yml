@@ -1,0 +1,33 @@
+---
+# File: auditd_purge_logs.yml
+# Description: This playbook deletes Auditd log files that are older than 4 days
+
+- hosts: all
+
+  tasks:
+
+# the easy way
+#
+#    - name: purge every auditd log file that is older than 4 days
+#      shell: 'find /var/log/audit -type f -mtime +4 -exec rm {} \;'
+#
+# the classy way
+
+    - name: find files older than 4 days
+      find:
+        paths: "/var/log/audit"
+        file_type: file
+        age: "4d"
+      register: oldfile
+
+    - name: remove files older than 4 days
+      file: 
+        path: "{{ item.path }}"
+        state: absent
+      with_items:
+        - "{{ oldfile.files }}"
+      when:
+        - oldfile.files is defined
+
+...
+# vim:ft=ansible:
