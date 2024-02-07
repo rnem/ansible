@@ -1,0 +1,11 @@
+---
+# file: enterprisedb.yml
+
+  - name: EnterpriseDB Playbook
+    hosts:
+      - all
+    roles:
+      - enterprisedb
+
+...
+# vim:ft=ansible:
