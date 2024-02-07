@@ -1,0 +1,99 @@
+---
+
+- name: Fetch debugging bundle for the isilon
+  hosts: all
+  gather_facts: no
+  vars:
+    usisi01_ips:
+    - 'X.Y.10.10'
+    - 'X.Y.10.11'
+    - 'X.Y.10.12'
+
+  vars_prompt:
+  - name: isilon_hn
+    prompt: "isilon hostname"
+    private: no
+  - name: mail_addr
+    prompt: "Email address to send log bundle to"
+    private: no
+
+  tasks:
+  # gather minimal ansible facts to avoid hanging on NFS fact gathering
+  - name: get just minimal facts
+    setup:
+      gather_subset: '!all'
+
+  - name: set debug bundle directory location
+    set_fact:
+      bundle_dir: "/tmp/ansible_isilon_debug_{{ansible_date_time.date}}"
+
+  - name: create debug file directory
+    file:
+      path: "{{bundle_dir}}"
+      state: directory
+
+  - name: showmount -e to a file
+    shell: "showmount -e {{isilon_hn}} &> {{bundle_dir}}/showmount_-e.txt"
+    failed_when: false
+
+  - name: showmount -a to a file
+    shell: "showmount -a {{isilon_hn}} &> {{bundle_dir}}/showmount_-a.txt"
+    failed_when: false
+  
+  - name: rpcinfo -p to a file
+    shell: "rpcinfo -p &> {{bundle_dir}}/rpcinfo_-p.txt"
+    failed_when: false
+  
+  - name: cat /proc/mounts to a file
+    shell: "cat /proc/mounts > {{bundle_dir}}/proc_mounts.txt"
+
+  - name: tcpdump to a file (10 minute wait)
+    register: timeout_result
+    command: "timeout 10m tcpdump host {{usisi01_ips|join(' or host ')}} -s0 -n -vvv -w {{bundle_dir}}/bidirectional_usisi01.pcap"
+    failed_when: "timeout_result.rc != 124"
+
+  - name: make archive
+    command: "zip --recurse-paths --junk-paths {{bundle_dir}}.zip {{bundle_dir}} /var/log/messages /etc/idmapd.conf /etc/resolv.conf /etc/fstab /etc/issue"
+      
+  - name: fetch archives
+    fetch:
+      src: "{{bundle_dir}}.zip"
+      dest: "{{bundle_dir}}/isilon_debug_bundle_{{inventory_hostname}}.zip"
+      flat: true
+
+  - name: cleanup archives
+    file:
+      path: "{{item}}"
+      state: absent
+    with_items:
+    - "{{bundle_dir}}"
+    - "{{bundle_dir}}.zip"
+
+  - name: bundle local files
+    delegate_to: localhost
+    run_once: true
+    become: false
+    become_method: sudo
+    command: "zip --recurse-paths --junk-paths {{bundle_dir}}.zip {{bundle_dir}}"
+
+  - name: bundle local files
+    delegate_to: localhost
+    run_once: true
+    become: false
+    become_method: sudo
+    shell: "echo 'isilon debug log bundle is attached' | mailx -a {{bundle_dir}}.zip {{mail_addr}}"
+
+  - name: cleanup archives
+    delegate_to: localhost
+    run_once: true
+    become: false
+    become_method: sudo
+    file:
+      path: "{{item}}"
+      state: absent
+    with_items:
+    - "{{bundle_dir}}"
+    - "{{bundle_dir}}.zip"
+
+...
+# vim:ft=ansible:
