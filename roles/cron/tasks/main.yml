@@ -40,7 +40,7 @@
       selevel: s0
 
   - name: service
-    service: >
+    service:
       name: crond
       enabled: yes
       state: started
