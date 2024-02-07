@@ -1,0 +1,41 @@
+---
+# katello-ca-consumer tasks file for roles/subscribe_satellite
+
+- name: update all the katello-ca-consumer
+  hosts: all
+
+  vars:
+    satellite_host: current.satellite.host.domain.com
+    satellite_prior_host: old.satellite.host.domain.com
+    satellite_package_name: katello-ca-consumer-{{ satellite_host }}.noarch
+    satellite_prior_package_name: katello-ca-consumer-{{ satellite_prior_host }}.noarch
+    satellite_rpm_url: "https://{{ satellite_host }}/pub/katello-ca-consumer-latest.noarch.rpm"
+
+  tasks:
+    - name: download satellite consumer rpm if not installed
+      get_url: 
+        url: "{{ satellite_rpm_url }}"
+        dest: /var/tmp/{{ satellite_package_name }}.rpm
+        mode: 0600
+        validate_certs: no
+      register: satellite_rpm_url_downloaded
+
+    - name: remove current katello-ca-consumer package
+      yum:
+        name: "{{ satellite_package_name }}"
+        state: absent
+
+    - name: install satellite consumer rpm if not installed
+      yum:
+        name: /var/tmp/{{ satellite_package_name }}.rpm
+        state: latest
+        disablerepo: "*"
+        enablerepo: "rhel-{{ ansible_distribution_major_version }}-server-rpms"
+      register: satellite_consumer_rpm_install_triggered
+
+    - name: remove satellite consumer rpm after install
+      command: rm -f /var/tmp/{{ satellite_package_name }}.rpm
+      when: satellite_consumer_rpm_install_triggered|changed
+
+...
+# vim:ft=ansible:
