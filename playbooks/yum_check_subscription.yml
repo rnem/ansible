@@ -1,0 +1,29 @@
+---
+
+# Playbook: yum_check_subscription.yml 
+# Check whether hosts are subscribed to Red Hat Satellite
+
+- name: check connectivity
+  hosts: all
+  gather_facts: no
+  serial: 50
+  tasks:
+  - name: check connectivity
+    ping:
+
+- name: yum check subscription
+  hosts: all
+  gather_facts: no
+  serial: 50
+  tasks:
+
+    # This task is needed to check if we are subscribed correctly
+    # if we aren't. Then fail.
+    - name: subscription manager check status
+      command: subscription-manager status
+      register: substatus
+      failed_when: "substatus.rc > 0 or 'Not supported by a valid subscription' in substatus.stdout"
+      changed_when: "substatus.rc != 0"
+
+...
+# vim:ft=ansible:
