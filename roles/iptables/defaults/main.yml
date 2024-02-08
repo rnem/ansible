@@ -1,0 +1,58 @@
+---
+# defaults file for roles/iptables
+
+iptables_chain_INPUT: 'ACCEPT'
+iptables_chain_FORWARD: 'DROP'
+iptables_chain_OUTPUT: 'ACCEPT'
+
+iptables_chain_nat_INPUT: 'ACCEPT'
+iptables_chain_nat_OUTPUT: 'ACCEPT'
+iptables_chain_nat_PREROUTING: 'ACCEPT'
+iptables_chain_nat_POSTROUTING: 'ACCEPT'
+
+iptables_nat_PREROUTE: []
+
+# This is a placeholder. If you need to declare ports for a server, do so under group_vars
+iptables_INPUT: []
+
+iptables_INPUT_footer:
+  - { 'sports': '111,300,302,304,2049', 'proto': 'tcp', 'srcrange': '173.X0.Y0.Z0-173.X1.Y1.Z1' }
+  - { 'sports': '111,300,302,304,2049', 'proto': 'tcp', 'srcrange': '173.X2.Y2.Z2-173.X3.Y3.Z3' }
+  - { 'sports': '111,300,302,304,2049', 'proto': 'udp', 'srcrange': '173.X4.Y4.Z4-173.X5.Y5.Z5' }
+  - { 'sports': '111,300,302,304,2049', 'proto': 'udp', 'srcrange': '173.X6.Y6.Z6-173.X7.Y7.Z7' }
+  - { 'dport': '1556', 'proto': 'tcp', 'match': 'tcp', 'response': 'ACCEPT' }
+  - { 'state': 'RELATED,ESTABLISHED', 'response': 'ACCEPT' }
+  - { 'proto': 'icmp', 'response': 'ACCEPT' }
+  - { 'interface': 'lo', 'response': 'ACCEPT' }
+  - { 'dport': '22', 'proto': 'tcp', 'match': 'tcp', 'state': 'NEW', 'response': 'ACCEPT' }
+  - { 'response': 'DROP' }
+
+iptables_FORWARD: []
+
+iptables_OUTPUT: []
+
+iptables_manage: false
+
+ip6tables_chain_INPUT: 'ACCEPT'
+ip6tables_chain_FORWARD: 'DROP'
+ip6tables_chain_OUTPUT: 'ACCEPT'
+
+# This is a placeholder. If you need to declare ports for a server, do so under group_vars
+ip6tables_INPUT: []
+
+ip6tables_INPUT_footer:
+  - { 'dport': '1556', 'proto': 'tcp', 'match': 'tcp', 'response': 'ACCEPT' }
+  - { 'state': 'RELATED,ESTABLISHED', 'response': 'ACCEPT' }
+  - { 'proto': 'ipv6-icmp', 'response': 'ACCEPT' }
+  - { 'interface': 'lo', 'response': 'ACCEPT' }
+  - { 'dport': '22', 'proto': 'tcp', 'match': 'tcp', 'state': 'NEW', 'response': 'ACCEPT' }
+  - { 'response': 'DROP' }
+
+ip6tables_FORWARD: []
+
+ip6tables_OUTPUT: []
+
+ip6tables_manage: false
+
+...
+# vim:ft=ansible:
