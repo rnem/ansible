@@ -1,0 +1,39 @@
+---
+# file: roles/user_mgmt/tasks/set_homedir_perms.yml
+#
+# Order of operation: rm_users.yml -> rm_groups.yml -> add_groups.yml ->
+#                     add_users.yml -> set_homedir_perms.yml
+
+  - name: user management system and local users home mode
+    file:
+      path: "{{ user_list[item].home | default('/home/' + item) }}"
+      owner: "{{ item | mandatory }}"
+      group: "{{ user_list[item].group | default(item) | mandatory }}"
+      mode: 0700
+    with_flattened:
+    - "{{ global_system_users }}"
+    - "{{ local_admin_users }}"
+    - "{{ local_service_users }}"
+    when:
+      - (user_list[item].state|default('present')) == 'present'
+    ignore_errors: true
+    tags:
+      - user_mgmt
+      - perms
+
+  - name: user management custom users home mode
+    file:
+      path: "{{ item.home | default(user_list[item.name].home) | default('/home/' + item.name) }}"
+      owner: "{{ item.name | mandatory }}"
+      group: "{{ item.group | default(user_list[item.name].group) | default(item.name) | mandatory }}"
+      mode: "{{ item.home_mode | default('0700') }}"
+    with_items: "{{ custom_service_users }}"
+    when:
+      - (user_list[item.name].state|default('present')) == 'present'
+    ignore_errors: true
+    tags:
+      - user_mgmt
+      - perms
+
+...
+# vim:ft=ansible:

@@ -1,0 +1,47 @@
+---
+# defaults file
+
+users_manage: true
+ssh_manage: true
+
+ansible_host_permits:
+  - ansible@host1.domain.com
+  - ansible@host2.domain.com
+  - ansible@host3.domain.com
+  - ansible@host4.domain.com
+
+#
+# These variables are used by the sshd_config template. Any host or group
+# specific variables should be set in that host or group's var file.
+#
+# Any variable that is commented out mostly likely is not required, but if
+# set will be used.
+AddressFamily: "inet"
+Port: 22
+#ListenAddress: 0.0.0.0
+Protocol: 2
+SyslogFacility: "AUTHPRIV"
+LogLevel: "INFO"
+PermitRootLogin: no
+MaxAuthTries: 4
+#MaxSessions: 10
+HostbasedAuthentication: no
+IgnoreRhosts: yes
+PermitEmptyPasswords: no
+PasswordAuthentication: no
+ChallengeResponseAuthentication: no
+GSSAPIAuthentication: yes
+GSSAPICleanupCredentials: yes
+UsePAM: yes
+X11Forwarding: no
+#TCPKeepAlive: yes
+PermitUserEnvironment: no
+ClientAliveInterval: 900
+ClientAliveCountMax: 0
+Ciphers:
+  - aes128-ctr
+  - aes192-ctr
+  - aes256-ctr
+
+...
+# vim:ft=ansible:

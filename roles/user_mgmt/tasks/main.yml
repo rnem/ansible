@@ -1,0 +1,41 @@
+---
+
+  - include: rm_users.yml
+    when:
+      - users_manage
+    tags:
+      - user_mgmt
+
+  - include: rm_groups.yml
+    when:
+      - users_manage
+    tags:
+      - user_mgmt
+
+  - include: add_groups.yml
+    when:
+      - users_manage
+    tags:
+      - user_mgmt
+
+  - include: add_users.yml
+    when:
+      - users_manage
+    tags:
+      - user_mgmt
+
+  - include: set_homedir_perms.yml
+    when:
+      - users_manage
+    tags:
+      - user_mgmt
+
+  - include: ssh.yml
+    when:
+      - ssh_manage
+    tags:
+      - user_mgmt
+      - ssh
+
+...
+# vim:ft=ansible:

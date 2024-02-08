@@ -1,0 +1,55 @@
+---
+# file: roles/user_mgmt/tasks/add_users.yml
+#
+# Order of operation: rm_users.yml -> rm_groups.yml -> add_groups.yml ->
+#                     add_users.yml -> set_homedir_perms.yml
+
+  - name: user management system and local users
+    user:
+      name:     "{{ item }}"
+      uid:      "{{ user_list[item].uid | mandatory }}"
+      comment:  "{{ user_list[item].comment | mandatory }}"
+      home:     "{{ user_list[item].home | default('/home/' + item) }}"
+      password: "{{ user_list[item].password | default(omit) }}"
+      group:    "{{ user_list[item].group | default(omit) }}"
+      groups:   "{{ user_list[item].groups | default(omit) }}"
+      state:    "{{ user_list[item].state | default('present') }}"
+      remove:   "{{ user_list[item].remove | default('no') }}"
+      shell:    "{{ user_list[item].shell | default('/bin/bash') }}"
+      update_password: always
+    with_flattened:
+      - "{{ global_system_users }}"
+      - "{{ local_admin_users }}"
+      - "{{ local_service_users }}"
+      - "{{ host_local_service_users }}"
+    when:
+      - (user_list[item].state|default('present')) == 'present'
+    tags:
+      - user_mgmt
+
+  - name: user management custom users
+    user:
+      name:     "{{ item.name | mandatory }}"
+      uid:      "{{ item.uid | default(user_list[item.name].uid)}}"
+      comment:  "{{ item.comment | default(user_list[item.name].comment) }}"
+      home:     "{{ item.home | default(user_list[item.name].home) | default('/home/' + item.name) }}"
+      password: "{{ item.password | default(omit) }}"
+      group:    "{{ item.group | default(omit) }}"
+      groups:   "{{ item.groups | default(omit) }}"
+      state:    "{{ item.state | default('present') }}"
+      remove:   "{{ item.remove | default('no') }}"
+      shell:    "{{ item.shell | default('/bin/bash') }}"
+      system:   "{{ item.system | default(omit) }}"
+      createhome:   "{{ item.createhome | default(omit) }}"
+      update_password: always
+    with_items: "{{ custom_service_users }}"
+    when:
+      - (user_list[item.name].state|default('present')) == 'present'
+    tags:
+      - user_mgmt
+
+#    Recommended code below by Ansible Consultant ###
+#    when: "user_list[item].state|default('present') == 'present'"
+
+...
+# vim:ft=ansible:

@@ -1,0 +1,42 @@
+---
+# file: roles/user_mgmt/tasks/add_groups.yml
+#
+# Order of operation: rm_users.yml -> rm_groups.yml -> add_groups.yml ->
+#                     add_users.yml -> set_homedir_perms.yml
+
+  - name: user management set global groups linux 
+    group:
+      name:     "{{ item }}"
+      gid:      "{{ custom_groups[item].gid if custom_groups[item] is defined else group_list[item].gid | mandatory }}"
+      state:    "{{ group_list[item].state | default('present') }}"
+    with_items: "{{ global_groups }}"
+    when:
+      - (group_list[item].state|default('present')) == 'present'
+    tags:
+      - user_mgmt
+      - admin_accounts
+
+  - name: user management set local groups linux
+    group:
+      name:     "{{ item }}"
+      gid:      "{{ group_list[item].gid | mandatory }}"
+      state:    "{{ group_list[item].state | default('present') }}"
+    with_items: "{{ local_groups }}"
+    when:
+      - (group_list[item].state|default('present')) == 'present'
+    tags:
+      - user_mgmt
+
+  - name: user management set custom groups linux
+    group:
+      name:     "{{ item | mandatory }}"
+      gid:      "{{ custom_groups[item].gid | mandatory }}"
+      state:    "{{ custom_groups[item].state | default('present') }}"
+    with_items: "{{ custom_groups.keys() }}"
+    when:
+      - custom_groups is defined
+    tags:
+      - user_mgmt
+
+...
+# vim:ft=ansible:

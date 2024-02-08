@@ -1,0 +1,30 @@
+---
+# file: roles/user_mgmt/tasks/rm_groups.yml
+#
+# Order of operation: rm_users.yml -> rm_groups.yml -> add_groups.yml ->
+#                     add_users.yml -> set_homedir_perms.yml
+
+  - name: user management remove global groups linux 
+    group:
+      name:     "{{ item }}"
+      gid:      "{{ group_list[item].gid | mandatory }}"
+      state:    "{{ group_list[item].state | default('present') }}"
+    with_items: "{{ global_remove_groups }}"
+    when:
+      - (group_list[item].state|default('present')) == 'absent' 
+    tags:
+      - user_mgmt
+
+  - name: user management remove local groups linux
+    group:
+      name:     "{{ item }}"
+      gid:      "{{ group_list[item].gid | mandatory }}"
+      state:    "{{ group_list[item].state | default('present') }}"
+    with_items: "{{ local_remove_groups }}"
+    when:
+      - (group_list[item].state|default('present')) == 'absent'
+    tags:
+      - user_mgmt
+
+...
+# vim:ft=ansible:
