@@ -1,0 +1,10 @@
+---
+
+- name: IPtables
+  hosts: 
+    - all 
+  roles:
+    - iptables
+
+...
+# vim:ft=ansible:
