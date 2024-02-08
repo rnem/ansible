@@ -1,0 +1,9 @@
+---
+
+  - name: User Management Role
+    hosts: all
+    roles:
+      - user_mgmt
+
+...
+# vim:ft=ansible:
