@@ -1,0 +1,11 @@
+---
+# file: mongodb.yml
+
+  - name: playbook to manage MongoDB
+    hosts:
+      - all
+    roles:
+      - mongodb
+
+...
+# vim:ft=ansible:
