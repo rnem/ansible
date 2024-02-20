@@ -1,0 +1,10 @@
+---
+
+- name: ulimits
+  hosts: 
+    - all
+  roles:
+    - ulimits
+
+...
+# vim:ft=ansible:
