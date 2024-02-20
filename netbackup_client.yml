@@ -1,0 +1,12 @@
+---
+# These hosts get the netbackup client installed
+
+- name: NetBackup Client
+  hosts:
+    - host1
+    - host2
+  roles:
+    - netbackup_client
+
+...
+# vim:ft=ansible:
