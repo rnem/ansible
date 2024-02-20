@@ -1,0 +1,5 @@
+---
+rsyslog_journald_client_manage: false
+
+...
+# vim:ft=ansible:

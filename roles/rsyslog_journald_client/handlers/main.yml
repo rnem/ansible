@@ -1,0 +1,15 @@
+---
+# handlers file for rsyslog
+  - name: restart rsyslog
+    service:
+      name: rsyslog
+      state: restarted
+
+# handlers for systemd-journald
+  - name: restart systemd-journald
+    service:
+      name: systemd-journald
+      state: restarted
+
+...
+# vim:ft=ansible:

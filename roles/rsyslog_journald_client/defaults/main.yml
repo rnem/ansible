@@ -1,0 +1,24 @@
+---
+# The default rsyslog journald manage value
+rsyslog_journald_client_manage: false
+
+# The rsyslog config path
+rsyslog_conf_path: /etc/
+
+# This is the working directory for rsyslog
+rsyslog_workdir: /var/lib/rsyslog
+
+#This is the timeframe for counting messages
+systemlog_interval: 5
+
+# This is the rate limit for number of messages per interval
+systemlog_burst: 2000
+
+# The Default journald rate limit values
+rate_limit_interval: 30s
+rate_limit_burst: 1000
+imjournal_rate_limit_interval: 600
+imjournal_rate_limit_burst: 20000
+
+...
+# vim:ft=ansible:

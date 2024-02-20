@@ -1,0 +1,65 @@
+---
+# Set rsyslog client configuration
+# variable files to include based on OS Family and Distribution Version
+## "always" tag is always called unless specifically skipped
+
+- name: "including os distribution specific variables"
+  include_vars: "{{ item }}"
+  with_first_found:
+    - "../defaults/{{ ansible_os_family }}{{ ansible_distribution_major_version }}.yml"
+  tags:
+    - always
+
+# BEGIN BLOCK: Managed and Red Hat
+- block:
+
+  - name: rsyslog client configuration rhel6
+    notify: restart rsyslog
+    template:
+      src: etc_rsyslog_conf_rhel6.j2
+      dest: "/etc/rsyslog.conf"
+      owner: root
+      group: root
+      mode: 0644
+      backup: yes
+    register: rsyslog_conf_rhel6
+    when:
+      - ansible_distribution_major_version == "6"
+      - inventory_hostname != "host1"
+      - inventory_hostname != "host2"
+
+  # BEGIN BLOCK - RHEL7 Tasks
+  - block:
+
+    - name: rsyslog client configuration rhel7
+      notify: restart rsyslog
+      template:
+        src: etc_rsyslog_conf_rhel7.j2
+        dest: "/etc/rsyslog.conf"
+        owner: root
+        group: root
+        mode: 0644
+        backup: yes
+      register: rsyslog_conf_rhel7
+
+    - name: journald client configuration rhel7
+      notify: restart systemd-journald
+      template:
+        src: etc_systemd_journald_conf.j2
+        dest: "/etc/systemd/journald.conf"
+        owner: root
+        group: root
+        mode: 0644
+        backup: yes
+      register: journald_conf
+    when:
+      - ansible_distribution_major_version == "7"
+    # END BLOCK - RHEL7 Tasks
+
+  # END BLOCK - Managed and Red Hat
+  when:
+    - rsyslog_journald_client_manage
+    - ansible_distribution == "RedHat"
+
+...
+# vim:ft=ansible:
