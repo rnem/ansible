@@ -1,0 +1,11 @@
+---
+# file: nginx.yml
+
+  - name: Nginx install
+    hosts:
+      - all
+    roles:
+      - nginx
+
+...
+# vim:ft=ansible:
