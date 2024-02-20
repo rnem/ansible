@@ -20,9 +20,11 @@ splunkuf_destroy_local_db  | do we want to completely remove the splunk folder b
 
 There is a list of basic packages required. These should already be installed by default and the list is here for safety only.
 
+```
 splunkuf_required:
   - acl
   - coreutils
+```
 
 Author Information
 ------------------
