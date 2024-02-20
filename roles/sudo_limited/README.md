@@ -33,7 +33,7 @@ Name          | Type           | Purpose
 sudoers has the following sub-variables:
 
 Name        | Type           | Default | Purpose
-------------|----------------|------------------------
+------------|----------------|---------|--------------
 `ticket`    | string         | none    | Optional: What servicenow ticket authorized this
 `expires`   | string         | none    | Optional: When does this request expire
 `user`      | string         | none    | What user are we granting privs
