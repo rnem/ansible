@@ -1,0 +1,8 @@
+---
+# defaults file for roles/sudo_custom
+
+sudo_limited_manage: false
+managed_sudoers:
+
+...
+# vim:ft=ansible:

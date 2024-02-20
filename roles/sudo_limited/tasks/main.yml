@@ -1,0 +1,22 @@
+---
+# tasks file for roles/ulimits
+  
+  - name: Limited sudo entries
+    template:
+      src: 00-template.j2
+      dest: /etc/sudoers.d/limited
+      owner: root
+      group: root
+      mode: 0440
+      seuser: system_u
+      serole: object_r
+      setype: etc_t
+    with_items:
+      - "{{ managed_sudoers }}"
+    when:
+      - sudo_limited_manage
+    tags:
+      - sudo_limited
+
+...
+# vim:ft=ansible:
