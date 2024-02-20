@@ -50,11 +50,12 @@ Same as requirements
 Example Playbook
 ----------------
 
----
+```
   - name: Subscribe Satellite Role All Systems
     hosts: all
     roles:
       - subscribe_satellite
+```
 
 License
 -------
