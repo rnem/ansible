@@ -1,0 +1,24 @@
+---
+# tasks file for roles/ulimits
+
+  - name: limits.d entry
+    template:
+      src: 00-template.j2
+      dest: /etc/security/limits.d/{{ item.priority }}-{{ item.domain }}.conf
+      owner: root
+      group: root
+      mode: 0644
+      backup: yes
+      seuser: system_u
+      serole: object_r
+      setype: etc_t
+      selevel: s0
+    with_items:
+      - "{{ managed_ulimits }}"
+    when:
+      - ulimits_manage
+    tags:
+      - ulimits
+
+...
+# vim:ft=ansible:

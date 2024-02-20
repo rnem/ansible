@@ -1,0 +1,8 @@
+---
+# defaults file for roles/ulimits
+
+ulimits_manage: false
+managed_ulimits:
+
+...
+# vim:ft=ansible:
