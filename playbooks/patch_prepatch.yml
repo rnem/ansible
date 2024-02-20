@@ -1,0 +1,37 @@
+---
+
+- name: verify subscription
+  hosts:
+  - 'all'
+  - '{{ patch_exclude_override |default("!patching_global_excludes") }}'
+  - '!dmc'
+  gather_facts: no
+  tasks:
+  - name: verify ; host up
+    ping:
+
+  - name: verify ; subscription-manager
+    register: substatus
+    command: subscription-manager status
+    failed_when: "substatus.rc > 0 or 'Not supported by a valid subscription' in substatus.stdout"
+    changed_when: "substatus.rc != 0"
+
+  tasks:
+  - name: regenerate ; clean
+    command: "yum clean -y -q all"
+
+  - name: regenerate ; makecache
+    command: "yum makecache -y -q"
+
+- name: predownload packages if RHEL6 or RHEL7
+  hosts:
+  - 'all'
+  - '{{ patch_exclude_override |default("!patching_global_excludes") }}'
+  - '!dmc'
+  tasks:
+  - name: predownload
+    command: "yum update -y -q --downloadonly"
+    when: ansible_distribution_major_version in ['6', '7']
+
+...
+# vim:ft=ansible:

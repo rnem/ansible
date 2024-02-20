@@ -1,0 +1,175 @@
+---
+
+- name: verify/prep requirements
+  hosts:
+  - 'patching_group_omega'
+  - '{{ patch_exclude_override |default("!patching_global_excludes") }}'
+  gather_facts: no
+  vars_prompt:
+  - name: "notused"
+    prompt: "This playbook will terminate your local ControlPersist sessions near the end\nDO NOT USE THIS WHILE RUNNING OTHER PLAYBOOKS \nPress enter to continue, ctrl+c to exit"
+  tasks:
+  # begin tasks block
+  - block:
+    - name: verify/prep ; host up
+      ping:
+
+    - name: verify/prep ; subscription-manager
+      register: substatus
+      command: subscription-manager status
+      failed_when: "substatus.rc > 0 or 'Not supported by a valid subscription' in substatus.stdout"
+      changed_when: "substatus.rc != 0"
+
+    - name: verify/prep; check if kernel update is present
+      command: yum -q check-update kernel
+      register: kernel_update_present
+      changed_when: kernel_update_present.rc == 100
+      failed_when: kernel_update_present.rc not in [0, 100]
+
+    # begin kernel update prep block
+    - block:
+      - name: verify/prep; ensure disk space by removing oldest kernel if new one available
+        command: package-cleanup -y --oldkernels --count=1
+
+      when: kernel_update_present|changed
+    # end kernel update prep block
+  # end tasks block
+
+- name: patch group omega
+  hosts:
+  - 'patching_group_omega'
+  - '{{ patch_exclude_override |default("!patching_global_excludes") }}'
+  pre_tasks:
+  # begin pre_tasks block
+  - block:
+    # begin httpd verify block
+    - block:
+      - name: patch ; verify httpd.conf
+        register: confd_st
+        stat: path=/etc/httpd/conf.d
+
+      - name: patch ; verify ssl.conf
+        register: ssl_conf_st
+        stat: path=/etc/httpd/conf.d/ssl.conf
+
+      when: apache_manage
+    # end httpd verify block
+
+    - name: patch ; update packages
+      command: 'yum update -y -q {% if ansible_distribution_major_version in ["6", "7"] %}--cacheonly{% endif %}'
+
+    # begin httpd cleanup block
+    - block:
+      - name: patch ; clear RHEL provided ssl.conf
+        when: not ssl_conf_st.stat.exists and confd_st.stat.exists
+        template:
+          src: templates/ssl.conf.j2
+          dest: /etc/httpd/conf.d/ssl.conf
+          owner: root
+          group: root
+          mode: 0755
+          seuser: system_u
+          setype: httpd_config_t
+          serole: object_r
+          selevel: s0
+
+      when: apache_manage
+    # end httpd cleanup block
+  # end pre_tasks block
+
+  roles:
+  - apache
+
+- name: postpatch
+  hosts:
+  - 'patching_group_omega'
+  - '{{ patch_exclude_override |default("!patching_global_excludes") }}'
+  tags:
+  - postreboot
+  tasks:
+  # begin tasks block
+  - block:
+    - name: postpatch ; stat newest repo kernel
+      register: repo_newest_kernel
+      command: repoquery -qa --qf '%{version}-%{release}{% if ansible_distribution_major_version in ["6", "7"] %}.%{arch}{% endif %}' kernel
+      always_run: yes
+
+    - name: postpatch ; stat installed kernels
+      register: system_kernels
+      command: rpm -qa kernel --qf '%{version}-%{release}{% if ansible_distribution_major_version in ["6", "7"] %}.%{arch}{% endif %},'
+      always_run: yes
+
+    - name: postpatch ; assert fresh kernel installed
+      assert: { that: "repo_newest_kernel.stdout in system_kernels.stdout.split(',')" }
+
+    - name: postpatch ; reboot
+      shell: '(sleep {{300|random(start=10)}} && shutdown -r now) &'
+      async: 1
+      poll: 0
+
+    - name: postpatch ; internal delay
+      pause:
+        seconds: 400
+        prompt: "postpatch; Internal delay wating for shutdowns (No output for 400 seconds)"
+
+      # Poll here otherwise fact checking will fail
+    - name: postpatch ; wait for reboot
+      local_action: wait_for host={{ inventory_hostname }}
+                    state=started
+                    port=22
+                    delay=0
+                    timeout=1600
+      become: false
+      become_method: sudo
+  # end tasks block
+
+  post_tasks:
+  # begin post_tasks block
+  - block:
+    - name: cleanup ; provide cancellation opportunity
+      pause: seconds=10 prompt="WARNING!!!!! About to initiate required teardown of local ControlPersist sessions!!!!!"
+
+    - name: cleanup ; ssh mux sessions
+      command: pkill -f '^ssh.*\[mux\]'
+      delegate_to: localhost
+      become: false
+      become_method: sudo
+      run_once: true
+      failed_when: false
+  # end post_tasks block
+
+- name: postreboot
+  tags:
+  - postreboot
+  - postpatch
+  hosts:
+  - 'patching_group_omega'
+  - '{{ patch_exclude_override |default("!patching_global_excludes") }}'
+  tasks:
+  # begin tasks block
+  - block:
+    - action: setup
+
+    - name: postreboot ; validate reboot occurred
+      register: postpatch_uptime
+      shell: "cut -d '.' -f 1 /proc/uptime"
+
+    - name: postreboot ; fail if no reboot occurred in last 30min
+      assert:
+        that:
+        - "postpatch_uptime.stdout|int < 3600 "
+
+    - name: postreboot ; stat newest repo kernel
+      register: repo_newest_kernel
+      command: repoquery -qa --qf '%{version}-%{release}{% if ansible_distribution_major_version in ["6", "7"] %}.%{arch}{% endif %}' kernel
+      always_run: yes
+
+    - name: postreboot ; assert fresh kernel running
+      assert: { that: "ansible_kernel == repo_newest_kernel.stdout" }
+
+    - name: postreboot ; refresh aide db as bg job
+      shell: '(aide --init) &'
+  # end tasks block
+
+...
+# vim:ft=ansible:
