@@ -1,4 +1,4 @@
-ulimits role
+Sudo Limits Role
 ============
 
 This role manages local/limited versions of sudoers files for one-off sudoers.
