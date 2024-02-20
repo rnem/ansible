@@ -1,0 +1,10 @@
+---
+# file: splunkuf.yml
+
+  - name: Splunk Universal Forwarder install
+    hosts:
+      - all
+    roles:
+      - splunkuf
+
+# vim:ft=ansible:
