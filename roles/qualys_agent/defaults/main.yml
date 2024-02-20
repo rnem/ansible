@@ -1,0 +1,7 @@
+---
+# defaults file for roles/qualys_agent
+
+qualys_agent_manage: true
+
+...
+# vim:ft=ansible:

@@ -1,0 +1,36 @@
+---
+# tasks file for roles/qualys_agent
+
+  - name: Copy Qualys Agent
+    copy: 
+      backup: no
+      dest: "/tmp/qualys-cloud-agent.x86_64.rpm"
+      src: "/opt/repo/QUALYS/qualys-cloud-agent.x86_64.rpm"
+    when:
+      - qualys_agent_manage
+    changed_when: false
+
+  - name: Install Qualys Agent
+    yum:
+      name: "/tmp/qualys-cloud-agent.x86_64.rpm"
+      state: present
+    when:
+      - qualys_agent_manage
+    ignore_errors: "{{ ansible_check_mode }}"
+
+  - name: Join Qualys Agent to cloud
+    command: "/usr/local/qualys/cloud-agent/bin/qualys-cloud-agent.sh ActivationId=****** CustomerId=******"
+    when:
+      - qualys_agent_manage
+    changed_when: false
+
+  - name: Clean up package
+    file: 
+      path: "/tmp/qualys-cloud-agent.x86_64.rpm"
+      state: absent
+    changed_when: false
+    when:
+      - qualys_agent_manage
+
+...
+# vim:ft=ansible:
