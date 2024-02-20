@@ -1,0 +1,9 @@
+---
+- name: rc_local
+  hosts: 
+    - all 
+  roles:
+    - rc_local
+
+...
+# vim:ft=ansible:
