@@ -1,0 +1,10 @@
+---
+- name: qualys_agent 
+  gather_facts: no
+  hosts: 
+    - all
+  roles:
+    - qualys_agent
+
+...
+# vim:ft=ansible:
