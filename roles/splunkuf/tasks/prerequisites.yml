@@ -1,0 +1,10 @@
+# file: roles/splunkuf/tasks/prerequisites.yml
+
+- name: install prerequisites
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items: "{{ splunkuf_required }}"
+
+...
+# vim:ft=ansible:

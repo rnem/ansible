@@ -1,0 +1,15 @@
+---
+# file: roles/splunk/tests/test.yml
+
+- hosts: all
+  tasks:
+    # to test the connectivity between the host and the deployment server
+    # you need to call this playbook using extra variables when appropriate
+    - name: test connectivity to deployment host
+      wait_for: 
+        host: "{{ splunkuf_deployment_server }}"
+        port: "{{ splunkuf_deployment_port }}"
+        timeout: 1
+
+...
+# vim:ft=ansible:

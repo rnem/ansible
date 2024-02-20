@@ -1,0 +1,17 @@
+---
+# file: roles/splunkuf/meta/main.yml
+
+galaxy_info:
+  author: Roger NEM
+  description: This role installs Splunk Universal Forwarder
+  company: My Company
+  license: license (GPLv2, CC-BY, etc)
+  min_ansible_version: 1.2
+
+  galaxy_tags: 
+    - splunkuf
+
+dependencies: []
+
+...
+# vim:ft=ansible:

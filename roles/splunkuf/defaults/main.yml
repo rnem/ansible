@@ -1,0 +1,32 @@
+---
+# file: roles/splunkuf/defaults/main.yml
+
+## Splunk Universal Forwarder defaults
+splunkuf_manage: false
+splunkuf_ver: 6.5.2-67571ef4b87d
+splunkuf_dir: "/opt/splunkforwarder"
+splunkuf_bin: "{{ splunkuf_dir }}/bin/splunk"
+
+splunkuf_user: splunk
+splunkuf_group: splunk
+
+## if additional directories need to be forwarded, they need to be
+## setup in splunkuf_extra_dir in group_vars or host_vars
+## IMPORTANT: splunkuf_extra_dir must be a dict or it WILL be ignored
+splunkuf_default_dir: /var/log
+
+splunkuf_required:
+  - acl
+  - coreutils
+
+## non-DMZ
+splunkuf_deployment_server: 10.10.1.100
+## DMZ
+# splunkuf_deployment_server: 10.10.30.30
+
+splunkuf_deployment_port: 8089
+
+splunkuf_destroy_local_db: false
+
+...
+# vim:ft=ansible:

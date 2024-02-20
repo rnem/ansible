@@ -1,0 +1,131 @@
+# file: roles/splunkuf/tasks/install.yml
+
+- name: check if process already running
+  shell: "pgrep splunkd"
+  register: splunkd_running
+  check_mode: no
+  changed_when: no
+  ignore_errors: yes
+
+- name: stop any running process
+  shell: "kill {{ item }} ; kill -9 {{ item }}"
+  when: splunkd_running.stdout != ""
+  with_items:
+    - "{{ splunkd_running.stdout_lines }}"
+  ignore_errors: yes
+
+- include: destroy.yml
+  when: splunkuf_destroy_local_db
+
+- name: copy package over to host
+  copy:
+    src: "/opt/repo/SPLUNK/splunkforwarder-{{ splunkuf_ver }}-linux-2.6-x86_64.rpm"
+    dest: "/tmp"
+    owner: "{{ splunkuf_user }}"
+    group: "{{ splunkuf_group }}"
+
+- name: install package
+  yum:
+    name: "/tmp/splunkforwarder-{{ splunkuf_ver }}-linux-2.6-x86_64.rpm"
+    state: present
+  when: not ansible_check_mode
+
+- name: set permissions on splunk directory
+  file:
+    path: "{{ splunkuf_dir }}"
+    owner: "{{ splunkuf_user }}"
+    group: "{{ splunkuf_group }}"
+    state: directory
+    recurse: yes
+  tags:
+    - dir_perms
+
+- name: set logs dir
+  set_fact:
+    # improved this to allow MULTIPLE extra dirs
+    # downside is splunkuf_extra_dir MUST be a dict and cannot be a string
+    # if it is a string, it will be ignored
+    splunkuf_logs_dir: '["{{ splunkuf_default_dir }}"{% if splunkuf_extra_dir is defined and splunkuf_extra_dir != [] and splunkuf_extra_dir is not string %}{% for extra_folder in splunkuf_extra_dir %},"{{ extra_folder }}"{% endfor %}{% endif %}]'
+  tags:
+    - dir_perms
+
+- name: check existence of log folder
+  stat:
+    path: "{{ item }}"
+  register: folder_stat
+  with_items:
+    - "{{ splunkuf_logs_dir }}"
+  tags:
+    - dir_perms
+
+# we don't want to change perms on already existing folders
+# so we run this only if the folder does not exist
+- name: create folder if necessary
+  file:
+    path: "{{ item.item }}"
+    owner: root
+    group: root
+    mode: 0755
+    state: directory
+  with_items:
+    - "{{ folder_stat.results }}"
+  when: not item.stat.exists
+  tags:
+    - dir_perms
+
+- name: set acls on parent directories to folders
+  shell: "EXTRA={{ item }}; while [[ $EXTRA != '/' ]]; do setfacl -m u:{{ splunkuf_user }}:x $EXTRA; EXTRA=$(dirname $EXTRA); done"
+  with_items:
+    - "{{ splunkuf_logs_dir }}"
+  tags:
+    - dir_perms
+
+- name: set acls on logs directory
+  acl:
+    path: "{{ item }}"
+    entity: "{{ splunkuf_user }}"
+    etype: user
+    permissions: rx
+    state: present
+    default: yes
+  with_items:
+    - "{{ splunkuf_logs_dir }}"
+  tags:
+    - dir_perms
+
+- name: set acls on pre-existing files
+  shell: "find {{ item }} -type f -exec setfacl -m u:{{ splunkuf_user }}:r {} \\;"
+  with_items:
+    - "{{ splunkuf_logs_dir }}"
+  tags:
+    - dir_perms
+
+- name: set acls on pre-existing directories
+  shell: "find {{ item }} -type d -exec setfacl -m u:{{ splunkuf_user }}:rx {} \\;"
+  with_items:
+    - "{{ splunkuf_logs_dir }}"
+  tags:
+    - dir_perms
+
+- name: run launcher and accept license
+  shell: "{{ splunkuf_bin }} start --accept-license --answer-yes --auto-ports --no-prompt"
+  become: true
+  become_user: "{{ splunkuf_user }}"
+
+- name: deploy splunk
+  shell: "{{ splunkuf_bin }} set deploy-poll {{ splunkuf_deployment_server }}:{{ splunkuf_deployment_port }} --accept-license --answer-yes --auto-ports --no-prompt -auth admin:changeme"
+  become: true
+  become_user: "{{ splunkuf_user }}"
+  notify:
+    - restart splunk
+
+- name: enable boot start
+  shell: "{{ splunkuf_bin }} enable boot-start -user {{ splunkuf_user }}"
+
+- name: remove package after install from /tmp folder
+  file:
+    path: "/tmp/splunkforwarder-{{ splunkuf_ver }}-linux-2.6-x86_64.rpm"
+    state: absent
+
+...
+# vim:ft=ansible:

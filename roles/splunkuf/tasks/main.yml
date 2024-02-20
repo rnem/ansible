@@ -1,0 +1,12 @@
+---
+# file: roles/splunkuf/tasks/main.yml
+# this playbook installs Splunk Universal Forwarder on the desired hosts
+
+- include: prerequisites.yml
+  when: splunkuf_manage
+
+- include: splunkuf.yml
+  when: splunkuf_manage
+
+...
+# vim:ft=ansible:

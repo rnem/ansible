@@ -1,0 +1,8 @@
+---
+# file: roles/splunkuf/handlers/main.yml
+
+  - name: restart splunk
+    shell: "{{ splunkuf_bin }} restart --accept-license --answer-yes --auto-ports --no-prompt"
+
+...
+# vim:ft=ansible:

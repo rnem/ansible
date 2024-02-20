@@ -1,0 +1,29 @@
+---
+# file: roles/splunkuf/tasks/destroy.yml
+
+- name: remove previous install
+  yum:
+    name: splunkforwarder
+    state: absent
+
+- name: verify status of splunkuf dir
+# if splunkuf_dir is empty or does not exist, this will fail
+  stat:
+    path: "{{ splunkuf_dir }}"
+  register: splunkufdir
+# if the owner of the folder is not splunk, something is wrong
+  failed_when: splunkufdir.stat.pw_name != splunkuf_user
+
+- name: remove previous conf
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - "/home/{{ splunkuf_user }}/.splunk"
+    - "{{ splunkuf_dir }}/etc"
+    - "{{ splunkuf_dir }}/var"
+# to play it extra safe, have the splunk user do the deletions
+  become_user: "{{ splunkuf_user }}"
+
+...
+# vim:ft=ansible:
