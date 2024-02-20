@@ -1,0 +1,10 @@
+---
+# handlers file for roles/nfs_server
+
+  - name: restart nfs server
+    service: 
+      name: nfs
+      state: restarted
+
+...
+# vim:ft=ansible:

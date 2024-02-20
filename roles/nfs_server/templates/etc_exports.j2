@@ -1,0 +1,11 @@
+{% for export in nfs_exports -%}
+  {{ export.path }}
+    {%- for host in export.hosts %} {% if host.host is defined -%}
+      {{ host.host }}
+    {%- endif -%}
+    {%- if host.opts is defined -%}
+      ({{ host.opts|join(",") }})
+    {%- endif -%}
+    {% endfor %}
+
+{% endfor %}

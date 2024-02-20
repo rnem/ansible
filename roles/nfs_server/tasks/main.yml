@@ -1,0 +1,56 @@
+---
+# tasks file for roles/nfs_server
+
+- name: packages
+  notify: restart nfs server
+  yum:
+    name: "{{ item }}"
+  with_items:
+    - nfs-utils
+    - nfs4-acl-tools
+    - nfs-utils-lib
+  when:
+    - nfs_server_manage
+
+- name: /etc/exports
+  notify: restart nfs server
+  template: 
+    src: etc_exports.j2
+    dest: /etc/exports
+    owner: root
+    group: root
+    mode: 0644
+    seuser: system_u
+    serole: object_r
+    setype: exports_t
+    selevel: s0
+  when:
+    - nfs_server_manage
+
+- name: /etc/idmapd.conf
+  notify: restart nfs server
+  template: 
+    src: etc_idmapd.j2
+    dest: /etc/idmapd.conf
+    owner: root
+    group: root
+    mode: 0644
+    seuser: system_u
+    serole: object_r
+    setype: etc_t
+    selevel: s0
+  when:
+    - nfs_server_manage
+
+- name: nfs service
+  notify: restart nfs server
+  service:
+    name: "{{ item }}"
+    enabled: yes
+  with_items:
+    - rpcbind
+    - nfs
+    - nfslock
+
+...
+# vim:ft=ansible:

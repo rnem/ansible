@@ -1,0 +1,8 @@
+---
+# defaults file for roles/nfs_server
+
+nfs_server_manage: false
+nfs_exports: []
+
+...
+# vim:ft=ansible:
