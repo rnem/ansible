@@ -1,0 +1,10 @@
+---
+
+- name: sudo_limited
+  hosts: 
+    - all 
+  roles:
+    - sudo_limited
+
+...
+# vim:ft=ansible:
