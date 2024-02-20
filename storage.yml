@@ -1,0 +1,10 @@
+---
+# (Add varibles/parameters in the proper group_vars file for Storage Playbook to work. Example provided below:)
+
+- name: Storage Config
+  hosts: all
+  roles:
+    - storage
+
+...
+# vim:ft=ansible:
