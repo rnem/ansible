@@ -4,10 +4,8 @@ Storage Role
 This role manages system storage
 
 OS Versions:
-- RHEL 6
-- RHEL 7
-
--- This role functions on RHEL6 and RHEL7
+- RHEL 6 -- This role functions on RHEL6
+- RHEL 7 -- This role functions on RHEL7
 
 Requirements
 ------------
