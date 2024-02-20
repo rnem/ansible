@@ -1,0 +1,27 @@
+---
+# katello-agent tasks file for roles/subscribe_satellite
+- name: install puppet agent/client
+  yum:
+    name: puppet
+    state: present
+  register: puppet_agent_installed
+  notify:
+    - enable puppet agent
+
+- name: configure puppet agent
+  command: /usr/bin/puppet config set server {{ satellite_host }} --section agent
+  when: puppet_agent_installed|success
+
+- name: run puppet test
+  command: /usr/bin/puppet agent --test --noop --onetime --waitforcert 10
+  register: puppet_agent_test
+  when: puppet_agent_installed|success
+
+- name: start puppet agent
+  service:
+    name: puppet
+    state: started
+  when: puppet_agent_test|success
+
+...
+# vim:ft=ansible:

@@ -1,0 +1,101 @@
+---
+# RedHat subscription-manager specific tasks
+
+- name: current status with satellite server
+  register: subscription_manager_status
+  command: subscription-manager status
+  failed_when: "'Unknown' in subscription_manager_status.stdout_lines[3]"
+  changed_when: "'Invalid' in subscription_manager_status.stdout_lines[3] or 'Insufficient' in subscription_manager_status.stdout_lines[3]"
+  ignore_errors: True
+
+- name: register subscriptions with satellite server
+  register: subscription_manager_register_result
+  command: "{{ subscription_manager_register_command }}" 
+  failed_when: "'system has been registered' not in subscription_manager_register_result.stdout_lines[0]"
+  changed_when: "'system has been registered' in subscription_manager_register_result.stdout_lines[0]"
+  when: subscription_manager_status|failed and not subscription_manager_status|changed
+
+- name: refresh data and auto attach subscriptions not associated with activation-keys
+  shell: "subscription-manager refresh && subscription-manager attach --auto"
+  register: subscription_manager_attach_result
+  when: subscription_manager_status|changed or subscription_manager_register_result|changed
+
+- name: confirm status with satellite server
+  register: subscription_manager_status_confirmed
+  command: subscription-manager status
+  failed_when: "'Current' not in subscription_manager_status_confirmed.stdout_lines[3]"
+  changed_when: false
+  when: subscription_manager_status|changed or subscription_manager_register_result|changed
+
+# Done to consolidate the two subscription-manager status task results
+- name: assert system is registered
+  assert:
+    that:
+      - subscription_manager_status|success or subscription_manager_status_confirmed|success
+  register: subscription_manager_is_registered
+
+- name: check if repos enabled are the same as repos defined
+  shell: 'subscription-manager repos --list | grep -B3 "^Enabled:.*1$" | grep "^Repo ID:" | tr -d " " | cut -d":" -f2'
+  register: subscription_manager_repos_currently_enabled
+  failed_when: subscription_manager_repos_currently_enabled.rc > 0
+  changed_when: subscription_manager_repos_enable_list != subscription_manager_repos_currently_enabled.stdout_lines|sort
+  when: subscription_manager_is_registered|success
+
+- name: check if gpgcheck off override for repos same as defined
+  shell: 'subscription-manager repo-override --list | egrep "^ *.gpgcheck:. *0|^Repository: " | grep -B1 "^ *.gpgcheck:. *0" | grep "Repository:" | cut -d" " -f2'
+  register: subscription_manager_repos_gpgcheck_currently_disabled
+  failed_when: subscription_manager_repos_gpgcheck_currently_disabled.rc > 0
+  changed_when: subscription_manager_repos_disable_gpgcheck_list != subscription_manager_repos_gpgcheck_currently_disabled.stdout_lines|sort
+  when: subscription_manager_is_registered|success
+
+# This has to be done because Satellite 6.0 cannot honor repo settings defined in activation-keys
+# The join filter has to be done during the task becasue it won't be
+# rendered until play execution after loading of role's vars/*.yml
+# We disable all the repos, then only enable repos defined and desired
+# Disable has to be it's own task command becuase RedHat 5 does disable after enable flags
+- name: disable repositories before enabling defined
+  command: subscription-manager repos {{ subscription_manager_repos_disable_args }}
+  register: subscription_manager_repos_disable_first_command
+  when: subscription_manager_repos_currently_enabled|changed
+
+- name: enable only defined repositories 
+  command: subscription-manager repos --enable={{ subscription_manager_repos_enable_list|join(' --enable=')}} 
+  register: subscription_manager_repos_enable_command
+  when: subscription_manager_repos_currently_enabled|changed
+
+- name: confirm repos enabled are the same as repos defined
+  shell: 'subscription-manager repos --list | grep -B3 "^Enabled:.*1$" | grep "^Repo ID:" | tr -d " " | cut -d":" -f2 | sort'
+  register: subscription_manager_repos_confirm_enabled
+  changed_when: false
+  when: subscription_manager_repos_enable_command|changed
+
+- name: remove gpgcheck override from all defined repos
+  command: subscription-manager repo-override --remove=gpgcheck --repo={{ subscription_manager_repos_enable_list|join(' --repo=')}}
+  register: subscription_manager_repos_remove_gpgcheck_override_command
+  when: subscription_manager_repos_gpgcheck_currently_disabled|changed
+
+- name: disable gpgcheck override for specified repositories
+  command: subscription-manager repo-override --add=gpgcheck:0 --repo={{ subscription_manager_repos_disable_gpgcheck_list|join(' --repo=')}}
+  register: subscription_manager_repos_disable_gpgcheck_command
+  when:
+    - subscription_manager_repos_disable_gpgcheck_list|length > 0
+    - subscription_manager_repos_gpgcheck_currently_disabled|changed
+
+- name: confirm if gpgcheck off override for repos same as defined
+  shell: 'subscription-manager repo-override --list | egrep "^ *.gpgcheck:. *0|^Repository: " | grep -B1 "^ *.gpgcheck:. *0" | grep "Repository:" | cut -d" " -f2'
+  register: subscription_manager_repos_gpgcheck_confirm_disabled
+  changed_when: false
+  when: subscription_manager_repos_disable_gpgcheck_command|changed or subscription_manager_repos_remove_gpgcheck_override_command|changed
+
+# Done to consolidate/confirm all tasks in this file are good and have something to pass for next
+# task include file.
+- name: assert subscription-manager is registered and repos enabled
+  assert:
+    that:
+      - subscription_manager_repos_currently_enabled|success or subscription_manager_repos_confirm_enabled|success
+      - subscription_manager_repos_gpgcheck_currently_disabled|success or subscription_manager_repos_gpgcheck_confirm_disabled|success
+      - subscription_manager_is_registered|success
+  register: subscription_manager_is_registered_and_repos_enabled
+
+...
+# vim:ft=ansible:

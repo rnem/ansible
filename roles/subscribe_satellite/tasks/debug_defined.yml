@@ -1,0 +1,29 @@
+---
+# debugging tasks file for roles/subscribe_satellite
+- name: debugging variables
+  debug:
+    var: "{{ item.key }}"
+  register: desired_repos
+  when:
+    - item.key in satellite_activation_keys
+  with_dict: satellite_activation_key_repos
+
+- name: print command and arg vars
+  debug:
+    var: "{{ item }}"
+  with_items:
+    - satellite_activation_keys
+    - subscription_manager_register_activationkey_args
+    - subscription_manager_register_args
+    - subscription_manager_register_command
+    - subscription_manager_repos_enable
+    - subscription_manager_repos_enable_list
+    - test_subscription_manager_repos_enable_list
+
+- name: pause so can escape debug
+  pause:
+    seconds: 200
+    prompt: "Waiting 200 seconds so you have chance to escape debug"
+
+...
+# vim:ft=ansible:

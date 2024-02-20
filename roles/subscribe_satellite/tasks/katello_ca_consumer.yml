@@ -1,0 +1,50 @@
+---
+# katello-ca-consumer tasks file for roles/subscribe_satellite
+
+# Reasons for doing multiple task steps to install the Satellite
+# server's CA certificates and config package:
+#  - Satellite's CA certs are not installed global PKI truststore
+#  - The certs we need are provided in this file
+#  - Ansible 2.1 (in dev) yum module finally adds ssl verify option
+# 
+
+- name: check if old satellite consumer rpm is removed
+  yum:
+    name: "{{ satellite_prior_package_name }}"
+    state: absent
+
+- name: check if satellite consumer rpm is already installed
+  yum:
+    name: "{{ satellite_package_name }}"
+    state: present
+  register: satellite_consumer_already_installed
+  ignore_errors: True
+
+- name: download satellite consumer rpm if not installed
+  get_url: 
+    url: "{{ satellite_rpm_url }}"
+    dest: /var/tmp/{{ satellite_package_name }}.rpm
+    mode: 0600
+    validate_certs: no
+  register: satellite_rpm_url_downloaded
+  when: satellite_consumer_already_installed|failed
+
+- name: install satellite consumer rpm if not installed
+  yum:
+    name: /var/tmp/{{ satellite_package_name }}.rpm
+    state: present
+  register: satellite_consumer_rpm_install_triggered
+  when: satellite_rpm_url_downloaded|success and satellite_consumer_already_installed|failed
+
+- name: remove satellite consumer rpm after install
+  command: rm -f /var/tmp/{{ satellite_package_name }}.rpm
+  when: satellite_consumer_rpm_install_triggered|changed
+
+- name: assert satellite consumer rpm is installed
+  assert:
+    that:
+      - satellite_consumer_already_installed|success or satellite_consumer_rpm_install_triggered|success
+  register: satellite_consumer_rpm_is_installed
+
+...
+# vim:ft=ansible:

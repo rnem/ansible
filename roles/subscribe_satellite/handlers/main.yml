@@ -1,0 +1,20 @@
+---
+# handlers file for roles/subscribe_satellite
+
+- name: enable katello agent
+  service:
+    name: goferd
+    enabled: yes
+
+- name: start katello agent
+  service:
+    name: goferd
+    state: started
+
+- name: enable puppet agent
+  service:
+    name: puppet
+    enabled: yes
+
+...
+# vim:ft=ansible:

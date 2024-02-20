@@ -1,0 +1,64 @@
+---
+# tasks file for roles/subscribe_satellite
+#
+# This style of includes is done to make tagging simpler,
+# reduce the complication of "when:" statements, and 
+# make it easier to borrow code
+
+# Debugging of variables required before executing tasks
+# May need to be updated with desired variable names
+#- include: debug_defined.yml
+#  tags: 
+#    - satellite
+#    - satellite_debug
+#  when: satellite_manage and subscription_manager_debug
+
+# First step is too pull an RPM file from the Sat server to get it's 
+# CA and client SSL certs and config settings
+- include: katello_ca_consumer.yml
+  when: satellite_manage
+  tags:
+    - satellite
+    - satellite_consumer_rpm
+
+# /usr/sbin/subscription-managers commands to register and configure
+# subscription/product/package repos with Satellite server
+- include: subscription_manager.yml
+  when: satellite_manage and satellite_consumer_rpm_is_installed|success
+  tags: 
+    - satellite
+    - satellite_subscription_manager
+
+- name: local repo remove /etc/yum.repos.d/rhel-dvd.repo
+  file: 
+    path: /etc/yum.repos.d/rhel-dvd.repo
+    state: absent
+  when: not dvdrepo_manage
+
+# Katello Agent won't be implemented until new Satellite Server is deployed
+# The Katello Agent is used for realtime reporting and remote package managment
+- include: katello_agent.yml
+  when: satellite_manage and subscription_manager_is_registered_and_repos_enabled|success
+  tags:
+    - satellite
+    - satellite_katello_agent
+
+# Satellite Sever can also be a Puppet 3 server, but for it's also required for the 
+# OSCAP Compliance reports believe it or not. OSCAP reports will not be implemented until 
+# new Satellite Server
+#- include: puppet_agent.yml
+#  tags:
+#    - satellite
+#    - satellite_puppet_agent
+#  when: satellite_manage and subscription_manager_is_registered_and_repos_enabled|success
+
+# Debugging for confirming values of registered variables during tasks
+# May need to be updated with desired variable names
+#- include: debug_registered.yml
+#  tags: 
+#    - satellite
+#    - satellite_debug
+#  when: satellite_manage and subscription_manager_debug
+
+...
+# vim:ft=ansible:

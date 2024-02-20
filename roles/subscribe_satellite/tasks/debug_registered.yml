@@ -1,0 +1,14 @@
+---
+# debugging registered task variables for roles/subscribe_satellite
+
+- name: print command and arg vars
+  debug:
+    var: "{{ item }}"
+  with_items:
+    - satellite_rpm_status
+    - subscription_manager_status
+    - subscription_manager_assert
+    - subscription_manager_register_result
+
+...
+# vim:ft=ansible:

@@ -1,0 +1,29 @@
+---
+# vars file for roles/subscribe_satellite
+# Sort filter used because last key in list dictates lifecycle flow (content view, lifecycle env.)
+subscription_manager_register_activationkey_args: "--activationkey='{{ satellite_activation_keys|sort|join(',') }}'"
+subscription_manager_register_args: "--name='{{ ansible_fqdn }}' --org='{{ satellite_org }}' {{ subscription_manager_register_activationkey_args }}"
+subscription_manager_register_command: "subscription-manager register {{ subscription_manager_register_args }}"
+
+subscription_manager_repos_disable_args: "--disable='*'"
+subscription_manager_repos_enable_list: |
+  {%- set combined_repo_list = [] -%}
+  {%- for key in satellite_activation_keys -%}
+    {%- set combined_repo_list = combined_repo_list + satellite_activation_key_repos[key]['repositories_enabled'] -%}
+    {%- if loop.last -%}{{ combined_repo_list|sort }}{%- endif -%}
+  {%- endfor -%}
+
+subscription_manager_repos_disable_gpgcheck_list: |
+  {%- set combined_repo_list = [] -%}
+  {%- for key in satellite_activation_keys -%}
+    {%- if satellite_activation_key_repos[key]['repositories_gpgcheck'] is defined and not satellite_activation_key_repos[key]['repositories_gpgcheck'] -%}
+      {%- set combined_repo_list = combined_repo_list + satellite_activation_key_repos[key]['repositories_enabled'] -%}
+    {%- endif -%}
+    {%- if loop.last -%}{{ combined_repo_list|sort }}{%- endif -%}
+  {%- endfor -%}
+
+#FYI: You cannot use subscription_manager_repos_enable_list again within the role's vars/* because it is not rendered
+# until it is executed in the ansible play. Only simply jija2 filters work, not jinja2 code.
+
+...
+# vim:ft=ansible:

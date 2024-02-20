@@ -1,0 +1,14 @@
+---
+# katello-agent tasks file for roles/subscribe_satellite
+
+- name: install katello-agent
+  yum:
+    name: katello-agent
+    state: latest
+  register: katello-agent_installed
+  notify:
+    - enable katello agent
+    - start katello agent
+
+...
+# vim:ft=ansible:
