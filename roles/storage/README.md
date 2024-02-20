@@ -6,7 +6,7 @@ This role manages system storage
 OS Versions:
 - RHEL 6
 - RHEL 7
--- This role functions on RHEL 6 and RHEL 7.
+-- This role functions on RHEL6 and RHEL7
 
 Requirements
 ------------
