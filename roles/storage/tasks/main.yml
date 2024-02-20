@@ -1,0 +1,101 @@
+---
+- name: Check Required Vars - Owner & Fstype
+  fail: msg="FATAL':' You may not create a mount without an owner and fstype!"
+  when: item.owner is not defined or item.fstype is not defined
+  with_items:
+    - "{{ managed_storage }}"
+
+# Turn this on when trying to verify what Ansible is seeing from the config 
+# files.  For esample if someone were to override group_vars with host_vars.
+#- name: List storage entries
+#  debug: msg="{{ item }}"
+#  with_items: managed_storage
+#  when: managed_storage is defined
+
+- name: setup volume group
+  lvg:
+    state: "{{ item.state | default(lvg_state) }}"
+    force: "{{ item.force | default(storage_force) }}"
+    vg: "{{ item.vg | default(vg_name) }}"
+    pvs: "{{ item.pvs | default(pvs) }}"
+    pesize: "{{ item.pesize | default(omit) }}"
+    vg_options: "{{ item.vg_options | default(omit) }}"
+  with_items:
+    - "{{ managed_storage }}"
+  when:
+    - storage_manage
+    - item.fstype in local_fstypes
+  tags:
+    - storage
+
+- name: setup LVM
+  lvol:
+    state: "{{ item.state | default(lvol_state) }}"
+    force: "{{ item.force | default(storage_force) }}"
+    vg: "{{ item.vg | default(vg_name) }}"
+    lv: "{{ item.lv }}"
+    size: "{{ item.size | default(omit) }}"
+  with_items:
+    - "{{ managed_storage }}"
+  when:
+    - storage_manage
+    - item.fstype in local_fstypes
+  tags:
+    - storage
+
+- name: setup filesystem
+  filesystem:
+    force: "{{ item.force | default(storage_force) }}"
+    fstype: "{{ item.fstype }}"
+    dev: "{%- set tmp_item_vg = item.vg | default(vg_name) -%}{{ item.dev | default('/dev/' + tmp_item_vg + '/' + item.lv) }}"
+    opts: "{{ item.fs_opts | default(omit) }}"
+    resizefs: "{{ item.resizefs | default('yes') }}"
+  with_items:
+    - "{{ managed_storage }}"
+  when:
+    - storage_manage
+    - item.fstype in local_fstypes
+  tags:
+    - storage
+
+- name: create mount and add to fstab
+  mount:
+    fstab: "{{ item.fstab | default(omit) }}"
+    state: "{{ item.state | default(mount_state) }}"
+    name: "{{ item.path }}"
+    src: "{%- set tmp_item_vg = item.vg | default(vg_name) -%}{{ item.src | default(omit if item.fstype == 'nfs' else '/dev/' + tmp_item_vg + '/' + item.lv) }}"
+    fstype: "{{ item.fstype }}"
+    opts: "{{ item.opts | default(opts_nfs if item.fstype == 'nfs' else opts_local) }}"
+    dump: "{{ item.dump | default(dump_nfs if item.fstype == 'nfs' else dump_local) }}"
+    passno: "{{ item.passno | default(passno_nfs if item.fstype == 'nfs' else passno_local) }}"
+  with_items:
+    - "{{ managed_storage }}"
+  when:
+    - storage_manage
+  tags:
+    - storage
+
+- name: set mount permissions
+  file:
+    follow: "{{ item.follow | default(omit) }}"
+    force: "{{ item.force | default(storage_force) }}"
+    state: "{% set tmpitst01 = 'absent' if (item.state is defined and item.state == 'unmounted') else item.state | default(dir_state) %}{{ tmpitst01 }}"
+    owner: "{{ item.owner | default(omit) }}"
+    group: "{{ item.group | default(item.owner) }}"
+    path: "{{ item.path }}"
+    mode: "{{ item.mode | default(mode) }}"
+    recurse: "{{ item.recurse | default(omit) }}"
+    selevel: "{{ item.selevel | default(mount_selevel) }}"
+    serole: "{{ item.serole | default(mount_serole) }}"
+    setype: "{{ item.setype | default(mount_setype_nfs if item.fstype == 'nfs' else mount_setype_local) }}"
+    seuser: "{{ item.seuser | default(mount_seuser) }}"
+  with_items:
+    - "{{ managed_storage }}"
+  when:
+    - storage_manage
+  tags: 
+    - storage
+    - storage_permissions
+
+...
+# vim:ft=ansible:

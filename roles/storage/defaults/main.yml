@@ -1,0 +1,65 @@
+---
+# defaults file for roles/storage
+# 
+# Local storage example:
+#
+# (required) path: "/opt/appteamfolder"
+# (required) lv: "lvappteam"
+# (required) size: "10453"
+# (required) fstype: "ext4"
+# (required) owner: "appteamusr"
+# (optional) group: "appteamgrp"
+# (optional) recurse: "no"
+# (optional) mode: "0755"
+# (optional) selevel: "s0"
+# (optional) serole: "object_r"
+# (optional) seuser: "system_u"
+# (optional) setype: "file_t"
+# (optional) vg: "vgAPPS"
+# (optional) pvs: "/dev/sdb,/dev/sdc"
+# (optional) force: "no"
+# (optional) vg_options: ""
+# (optional) opts: "relatime,nodev,nosuid"
+# (optional) state: "present"
+# (optional) dump: "1"
+# (optional) passno: "2"
+#
+# 
+
+# Common defaults
+mount_state: mounted
+dir_state: directory
+storage_force: no
+
+mount_selevel: s0
+mount_serole: object_r
+mount_seuser: system_u
+mode: "0700"
+
+# Local filesystem defaults
+lvol_state: present
+lvg_state: present
+vg_name: "vgAPPS"
+pvs: "/dev/sdb"
+opts_local: "relatime,nodev,nosuid"
+dump_local: "1"
+passno_local: "2"
+mount_setype_local: "file_t"
+
+# NFS defaults
+opts_nfs: "vers=3,timeo=600,intr,nosuid"
+dump_nfs: "0"
+passno_nfs: "0"
+mount_setype_nfs: "nfs_t"
+
+local_fstypes:
+  - ext4
+  - xfs
+
+local_storage_manage: false
+nas_storage_manage: false
+
+managed_storage: []
+
+...
+# vim:ft=ansible:
