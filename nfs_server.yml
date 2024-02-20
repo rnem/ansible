@@ -1,0 +1,9 @@
+---
+- name: NFS Server
+  hosts: 
+    - all 
+  roles:
+    - nfs_server
+
+...
+# vim:ft=ansible:
