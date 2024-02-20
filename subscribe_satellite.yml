@@ -1,0 +1,8 @@
+---
+  - name: Subscribe Satellite Role All Systems
+    hosts: all
+    roles:
+      - subscribe_satellite
+
+...
+# vim:ft=ansible:
