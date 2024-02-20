@@ -1,0 +1,11 @@
+---
+# file: roles/nginx/tasks/main.yml
+
+ - include: nginx.yml
+   when:
+     - nginx_manage
+   tags:
+     - nginx
+
+...
+# vim:ft=ansible:

@@ -1,0 +1,6 @@
+# {{ ansible_managed }}
+# sudoers file allowing the nginx user to start / stop / restart nginx
+
+Cmnd_Alias NGINX_CMDS=/etc/init.d/nginx start, /etc/init.d/nginx stop, /etc/init.d/nginx restart
+
+{{ nginx_user }} ALL=(root) NOPASSWD: NGINX_CMDS

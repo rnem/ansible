@@ -1,0 +1,17 @@
+# file: roles/nginx/tasks/permissions.yml
+
+- name: Creating folders
+  file:
+    path: "{{ item }}"
+    owner: "{{ nginx_user }}"
+    group: "{{ nginx_user }}"
+    mode: 0700
+    state: directory
+  with_items:
+    - "{{ nginx_pid }}"
+    - "{{ nginx_vhost_path }}"
+    - "{{ nginx_log }}"
+    - "{{ nginx_lib }}"
+
+...
+# vim:ft=ansible:

@@ -1,0 +1,18 @@
+---
+# file: roles/nginx/tasks/setup.yml
+
+- name: Ensure nginx is installed
+  yum:
+    name: "{{ nginx_package_name }}"
+    state: installed
+
+- name: Copy new initscript with proper paths
+  template:
+    src: initscript.j2
+    dest: /etc/init.d/nginx
+    owner: root
+    group: root
+    mode: 0755
+
+...
+# vim:ft=ansible:

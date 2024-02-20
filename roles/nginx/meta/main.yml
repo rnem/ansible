@@ -1,0 +1,23 @@
+---
+# file: roles/nginx/meta/main.yml
+
+dependencies: []
+
+galaxy_info:
+  author: 
+    - geerlingguy
+    - Roger NEM
+  description: Nginx installation for Red Hat
+  license: "license (BSD, MIT)"
+  min_ansible_version: 1.8
+  platforms:
+    - name: EL
+      versions:
+      - 6
+      - 7
+  galaxy_tags:
+    - development
+    - web
+
+...
+# vim:ft=ansible:

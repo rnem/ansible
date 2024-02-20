@@ -1,0 +1,46 @@
+---
+# file: roles/nginx/tasks/nginx.yml
+
+# install task
+- include: install.yml
+
+# Set permissions
+- include: permissions.yml
+
+# Vhost configuration.
+- include: vhosts.yml
+
+# Nginx configuration
+- name: Copy nginx configuration in place
+  template:
+    src: "{{ nginx_conf_template }}"
+    dest: "{{ nginx_conf_file_path }}"
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - validate nginx configuration
+    - restart nginx
+
+- name: Ensure nginx is started and enabled to start at boot
+  service:
+    name: "{{ nginx_service }}"
+    state: started
+    enabled: yes
+
+- name: Setup sudoer to run or restart nginx
+  template:
+    src: sudoers_nginx.j2
+    dest: /etc/sudoers.d/nginx
+    owner: root
+    group: root
+    mode: 0440
+    seuser: system_u
+    serole: object_r
+    setype: etc_t
+    selevel: s0
+    backup: yes
+    validate: /usr/sbin/visudo -cf %s
+
+...
+# vim:ft=ansible:

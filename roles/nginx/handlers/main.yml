@@ -1,0 +1,20 @@
+---
+# file: roles/nginx/handlers/main.yml
+
+- name: validate nginx configuration
+  command: "{{ nginx_bin }} -t -c {{ nginx_conf_file_path }}"
+  changed_when: False
+
+- name: reload nginx
+  service:
+    name: "{{ nginx_service }}"
+    state: reloaded
+
+- name: restart nginx
+  # after fixing initscript, regular service command should work fine
+  service:
+    name: "{{ nginx_service }}"
+    state: restarted
+
+...
+# vim:ft=ansible:
