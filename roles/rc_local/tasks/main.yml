@@ -1,0 +1,35 @@
+---
+# tasks file for rc_local
+
+- name: rc.local perms
+  file:
+    path: "/etc/rc.d/rc.local"
+    state: "file"
+    mode: "0755"
+
+- name: rc.local comment
+  lineinfile:
+    dest: /etc/rc.local 
+    insertafter: '#!/bin/bash'
+    regexp: '### This file is managed by Ansible\. Manual edits may be overwritten ###'
+    line: "### This file is managed by Ansible. Manual edits may be overwritten ###"
+  when:
+    - rc_local_manage
+
+- name: rc.local sleep
+  lineinfile:
+    dest: /etc/rc.local
+    insertafter: '### This file is managed by Ansible. Manual edits may be overwritten ###'
+    line: "sleep 5"
+  when:
+    - rc_local_manage
+
+- name: rc.local entries
+  lineinfile: dest=/etc/rc.local regexp='.*{{ item.replace_term }}.*' line="{{ item.precmd |default(':') }}; /bin/su -l '{{ item.user }}' --command='{{ item.command }}'"
+  with_items:
+    - "{{ rc_local_entries }}"
+  when:
+    - rc_local_manage
+
+...
+# vim:ft=ansible:

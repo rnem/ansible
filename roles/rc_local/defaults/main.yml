@@ -1,0 +1,7 @@
+---
+## defaults file for rc_local
+
+rc_local_manage: false
+
+...
+# vim:ft=ansible:
