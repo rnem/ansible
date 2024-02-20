@@ -1,0 +1,5 @@
+SERVER={{ nbu_master }}
+{% for item in nbu_servers %}
+SERVER={{ item }}
+{% endfor %}
+CLIENT_NAME={{ inventory_hostname }}.domain.com

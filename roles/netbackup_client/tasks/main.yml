@@ -1,0 +1,20 @@
+---
+# file: roles/netbackup_client/tasks/main.yml
+# this role installs Netbackup client on the required hosts
+
+- include: remove.yml
+  when:
+    - clean_install
+  tags:
+    - netbackup_client
+    - nbu_uninstall
+
+- include: install.yml
+  notify:
+    - start netbackup
+  tags:
+    - netbackup_client
+    - nbu_install
+
+...
+# vim:ft=ansible:

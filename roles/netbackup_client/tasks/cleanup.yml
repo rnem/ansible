@@ -1,0 +1,38 @@
+---
+# file: roles/netbackup_client/tasks/cleanup.yml
+
+# we check if the path for the VRTSpbx install exists
+- name: "Check if the {{ vrtspbx_path | default('/opt/VRTSpbx') }} path exists"
+  stat:
+    path: "{{ vrtspbx_path | default('/opt/VRTSpbx') }}"
+  register: vrtspbx_presence
+  check_mode: no
+
+# we check if the previous install used RPM packages or was manual
+- name: "Check if VRTSpbx rpm is installed"
+  yum:
+    list: "VRTSpbx"
+  register: vrtspbx_installed
+  check_mode: no
+
+# if an RPM package was used but the installation folder for VRTSpbx does not exist, remove the package
+- name: "Clean out damaged RPM installation"
+  yum:
+    name: "{{ vrtspbx_rpm | default('VRTSpbx') }}"
+    state: absent
+  when:
+    - vrtspbx_installed.results != []
+    - vrtspbx_installed.results.0.yumstate == "installed"
+    - not vrtspbx_presence.stat.exists
+
+# if no RPM package was used, remove the installation folder
+- name: "Remove {{ vrtspbx_path | default('/opt/VRTSpbx') }} if it was manually created"
+  file:
+    path: "{{ vrtspbx_path | default('/opt/VRTSpbx') }}"
+    state: absent
+  when:
+    - vrtspbx_installed.results == []
+    - vrtspbx_presence.stat.exists
+
+...
+# vim:ft=ansible:

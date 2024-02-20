@@ -1,0 +1,32 @@
+---
+# file: roles/netbackup_client/defaults/mail.yml
+
+# the version to install
+nbu_version: 8.1
+
+# the archive file containing said version
+# for easier upgrades, it is recommended to strip down the provided archives,
+# remove other distributions and only keep the files for RedHat2.6.18
+nbu_archive: /ansible-files/netbackup/NetBackup_{{ nbu_version }}_CLIENTS2.tar.xz
+
+# the temporary folder where the archive contents will be uploaded
+# this folder will be removed to save space after the install
+nbu_inst_dir: /opt/netbackup-installer
+
+# the netbackup master server
+nbu_master: nbumaster.domain.com
+
+# the netbackup servers
+nbu_servers:
+- nbusrv1.domain.com
+- nbusrv2.domain.com
+
+# do we want to remove the previous version and perform a clean install
+clean_install: false
+
+# this setting should not be modified unless you know what you are doing
+nbu_path: /usr/openv
+vrtspbx_path: /opt/VRTSpbx
+
+...
+# vim:ft=ansible:

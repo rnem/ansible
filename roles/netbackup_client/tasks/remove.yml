@@ -1,0 +1,40 @@
+---
+# file: roles/netbackup_client/tasks/remove.yml
+
+- name: "Stop NetBackup"
+  service:
+    name: netbackup
+    state: stopped
+  ignore_errors: true
+
+- include: cleanup.yml
+
+- name: remove all NetBackup related RPM packages
+  yum:
+    name: "{{ item }}"
+    state: absent
+  with_items:
+    - SYMCnbclt
+    - SYMCnbjava
+    - SYMCnbjre
+    - SYMCpddea
+    - VRTSnbjre
+    - VRTSnbclt
+    - VRTSpbx
+    - VRTSnbcfg
+    - VRTSnbjava
+    - VRTSnbpck
+    - VRTSpddea
+
+- name: remove the NetBackup software folders
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - "{{ nbu_path | default('/usr/openv') }}"
+    - "{{ vrtspbx_path | default('/opt/VRTSpbx') }}"
+  # the following is necessary for the one host where /usr/openv is a mount point
+  ignore_errors: yes
+
+...
+# vim:ft=ansible:

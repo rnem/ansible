@@ -1,0 +1,53 @@
+#!/bin/sh
+# 
+# Name: bp.kill_all_redux for NetBackup 
+# Author: Roger NEM - https://www.linkedin.com/in/rogertn
+#
+# The bp.kill_all script feels overcomplicated and does not properly
+# kill all NetBackup processes. This much simpler script accomplishes
+# virtually the same task.
+
+pid_exists() {
+  # testing the PID existence
+  pgrep $1 >/dev/null 2>/dev/null
+}
+
+sig_process() {
+  # attempt to terminate process gracefully
+  if pid_exists $1; then
+    case $2 in
+      9)
+        echo -n "Sending SIGKILL to $1... "
+        ;;
+      15)
+        echo -n "Sending SIGTERM to $1... "
+        ;;
+    esac
+    ${PKILL} -$2 $1 >/dev/null 2>/dev/null
+    echo "done."
+  fi
+}
+
+# script start
+echo "WARNING: this script will terminate every NetBackup related process."
+echo "If you ran it by accident, press Ctrl+C within five seconds to cancel."
+
+count=5
+while [ $count -gt 0 ]; do
+  echo -n "$count... " 
+  let count=count-1
+  sleep 1
+done
+echo
+
+if PKILL=$(which pkill); then
+  for process in bmrbd  bpcd  defunct  mtstrmd  nbatd  nbazd  nbaudit  nbdisco  nbemm  nbevtmgr  nbfdrv64  nbftclnt  nbftsrvr  nbrb  nbrntd  nbtelemetry  nbtelesched  spad  spoold  vpfsd  vmscd  vnetd  bpdbm  bpjobd  nbars  nbrmms  vxesfsd  vxesp; do
+    sig_process $process 15
+    sig_process $process 9
+  done
+else
+  # if pkill is not present on the system exit value is 1
+  exit 1
+fi
+
+exit 0

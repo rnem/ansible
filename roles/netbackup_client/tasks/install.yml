@@ -1,0 +1,97 @@
+---
+# file: roles/netbackup_client/tasks/netbackup_client.yml
+
+- name: "Check if NetBackup is already installed"
+  shell: "awk '{print $2}' /usr/openv/netbackup/bin/version"
+  register: reg_version
+  check_mode: no
+  failed_when: no
+  changed_when: no
+
+- name: "Save the version number of a pre-existing NetBackup"
+  set_fact:
+    installed_version: "{% if reg_version.rc > 0 %}0{% else %}{{ reg_version.stdout }}{% endif %}"
+
+- block:
+
+    - debug:
+        msg: "Install version {{ nbu_version }} of NetBackup{% if reg_version.rc < 1 %} over version {{ installed_version }}{% endif %}"
+
+    - name: "Stop NetBackup if it is running"
+      service:
+        name: netbackup
+        state: stopped
+      ignore_errors: true
+
+    - name: "Copy over the simplified Netbackup bp.kill_all_redux script"
+      copy:
+        src: bp.kill_all_redux
+        dest: /usr/openv/netbackup/bin/
+        owner: root
+        group: root
+        mode: 0700
+
+    - name: "Run the kill script"
+      shell: "/usr/openv/netbackup/bin/bp.kill_all_redux"
+      ignore_errors: true
+
+    - name: "Create the NBInstallAnswer.conf file in /tmp"
+      template:
+        src: NBInstallAnswer.conf.j2
+        dest: /tmp/NBInstallAnswer.conf
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: "Create the installation directory"
+      file:
+        path: "{{ nbu_inst_dir | default('/opt/netbackup-installer') }}"
+        state: directory
+        owner: root
+        group: root
+        mode: 0755
+        recurse: yes
+
+    - name: "Copy the archive over and extract its contents"
+      unarchive:
+        src: "{{ nbu_archive }}"
+        dest: "{{ nbu_inst_dir | default('/opt/netbackup-installer') }}/"
+        copy: yes
+        owner: root
+        group: root
+      ignore_errors: "{{ ansible_check_mode }}"
+
+    - name: "Install the RPM packages"
+      yum:
+        name: "{{ nbu_inst_dir | default('/opt/netbackup-installer') }}/NetBackup_{{ nbu_version}}_CLIENTS2/NBClients/anb/Clients/usr/openv/netbackup/client/Linux/RedHat2.6.18/{{ item }}"
+        state: present
+      ignore_errors: "{{ ansible_check_mode }}"
+      with_items:
+        - VRTSnbjre.rpm
+        - VRTSnbclt.rpm
+        - VRTSpbx.rpm
+        - VRTSnbcfg.rpm
+        - VRTSnbjava.rpm
+        - VRTSnbpck.rpm
+        - VRTSpddea.rpm
+      notify:
+        - start netbackup
+
+    - name: "Get the new CA certificate"
+      shell: "yes | /usr/openv/netbackup/bin/nbcertcmd -getCACertificate"
+      when: clean_install
+
+    - name: "Get the new certificate"
+      command: "/usr/openv/netbackup/bin/nbcertcmd -getCertificate"
+      when: clean_install
+
+  # we proceed with the install if we're upgrading from an older version or if the version is not found
+  when: installed_version | version_compare(nbu_version,'<')
+
+- name: "Cleanup the installation directory"
+  file:
+    path: "{{ nbu_inst_dir | default('/opt/netbackup-installer') }}"
+    state: absent
+
+...
+# vim:ft=ansible:

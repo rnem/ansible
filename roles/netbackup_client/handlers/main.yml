@@ -1,0 +1,10 @@
+---
+# file: roles/netbackup_client/handlers/main.yml
+
+- name: start netbackup
+  service:
+    name: netbackup
+    state: started
+
+...
+# vim:ft=ansible:
