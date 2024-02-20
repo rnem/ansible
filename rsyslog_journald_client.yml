@@ -1,0 +1,9 @@
+---
+- name: Rsyslog Client
+  hosts:
+    - all
+  roles:
+    - rsyslog_journald_client
+
+...
+# vim:ft=ansible:
