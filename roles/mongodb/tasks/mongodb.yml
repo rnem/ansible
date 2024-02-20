@@ -1,0 +1,28 @@
+---
+# file: roles/mongodb/tasks/mongodb.yml
+
+- name: "retrieve and install the metapackage from yum repository"
+  yum:
+    name: "{{ item }}"
+    state: latest
+    update_cache: yes
+  with_items:
+    - mongodb-enterprise
+
+- name: "configure mongodb"
+  template:
+    src: mongod.conf.j2
+    dest: /etc/mongod.conf
+    owner: root
+    group: root
+    mode: 0644
+    force: no
+
+- name: "start mongodb"
+  service:
+    name: mongod
+    state: started
+    enabled: yes
+
+...
+# vim:ft=ansible:

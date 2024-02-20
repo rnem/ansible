@@ -1,0 +1,10 @@
+---
+# file: roles/mongodb/tasks/main.yml
+# this playbook installs MongoDB on the desired hosts
+
+- include: mongodb.yml
+  when:
+    - mongodb_manage
+
+...
+# vim:ft=ansible:

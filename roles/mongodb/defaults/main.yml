@@ -1,0 +1,17 @@
+---
+# file: roles/mongodb/defaults/main.yml
+
+mongodb_manage: false
+
+# the following defaults respect the vendor guidelines
+mongodb_data_path: "/var/lib/mongo"
+mongodb_log_path: "/var/log/mongodb"
+
+mongodb_user: mongod
+mongodb_group: mongod
+
+mongodb_ip: 127.0.0.1
+mongodb_port: 27017
+
+...
+# vim:ft=ansible:
